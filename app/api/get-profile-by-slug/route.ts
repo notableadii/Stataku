@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client on server side
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +31,7 @@ export async function POST(request: NextRequest) {
           error: "Invalid JSON in request body",
           success: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -33,7 +44,7 @@ export async function POST(request: NextRequest) {
           error: "Slug is required",
           success: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -43,7 +54,7 @@ export async function POST(request: NextRequest) {
           error: "Slug must be a string",
           success: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -52,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Check if database is configured
     if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
       console.warn(
-        "Database not configured, using mock response for profile lookup",
+        "Database not configured, using mock response for profile lookup"
       );
 
       // Mock response for testing
@@ -72,6 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Query profile by slug with optimized index
+    const turso = getTursoClient();
     const result = await turso.execute({
       sql: `
         SELECT id, username, slug, display_name, bio, avatar_url, created_at 
@@ -89,7 +101,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Profile not found",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -121,7 +133,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Database connection error. Please try again.",
         },
-        { status: 503 },
+        { status: 503 }
       );
     }
 
@@ -133,7 +145,7 @@ export async function POST(request: NextRequest) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

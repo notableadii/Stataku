@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client on server side
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,11 +25,12 @@ export async function POST(request: NextRequest) {
     if (!userId || !username) {
       return NextResponse.json(
         { error: "User ID and username are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Create user profile
+    const turso = getTursoClient();
     const result = await turso.execute({
       sql: "INSERT INTO user_profiles (user_id, username) VALUES (?, ?)",
       args: [userId, username.toLowerCase()],
@@ -35,13 +47,13 @@ export async function POST(request: NextRequest) {
     if (error.message?.includes("UNIQUE constraint failed")) {
       return NextResponse.json(
         { error: "Username is already taken" },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

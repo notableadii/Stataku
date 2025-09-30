@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client on server side
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,12 +25,13 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Get user profile from profiles table
     // First try with new schema, fallback to old schema if columns don't exist
+    const turso = getTursoClient();
     let result;
     try {
       result = await turso.execute({
@@ -61,7 +73,7 @@ export async function POST(request: NextRequest) {
     console.error("Error getting user profile:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

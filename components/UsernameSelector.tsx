@@ -6,7 +6,6 @@ import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Avatar } from "@heroui/avatar";
 import { Spinner } from "@heroui/spinner";
-import { Chip } from "@heroui/chip";
 import { title, subtitle } from "@/components/primitives";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { usernameChecker } from "@/lib/username-cache";

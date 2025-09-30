@@ -109,8 +109,8 @@ export const getUserProfile = async (userId: string) => {
 };
 
 export const updateUserProfile = async (
-  userId: string,
-  updates: Partial<UserProfile>,
+  _userId: string,
+  _updates: Partial<UserProfile>,
 ) => {
   // TODO: Implement update profile API route if needed
   console.warn("updateUserProfile not implemented yet");

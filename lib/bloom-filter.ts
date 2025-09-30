@@ -131,7 +131,7 @@ export class UsernameCache {
       ttl: cacheTTL,
     });
     console.log(
-      `Cached username: ${key} = ${available}, cache size: ${this.cache.size}, TTL: ${cacheTTL}ms`
+      `Cached username: ${key} = ${available}, cache size: ${this.cache.size}, TTL: ${cacheTTL}ms`,
     );
 
     // If username is taken, add to bloom filter
@@ -191,7 +191,7 @@ export class UsernameCache {
       toRemove.forEach(([key]) => this.cache.delete(key));
 
       console.log(
-        `Cache cleanup: removed ${expiredKeys.length + toRemove.length} entries, cache size: ${this.cache.size}`
+        `Cache cleanup: removed ${expiredKeys.length + toRemove.length} entries, cache size: ${this.cache.size}`,
       );
     }
   }

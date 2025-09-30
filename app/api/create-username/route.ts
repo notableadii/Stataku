@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client on server side
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +31,7 @@ export async function POST(request: NextRequest) {
           error: "User ID and username are required",
           success: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -30,7 +41,7 @@ export async function POST(request: NextRequest) {
           error: "User ID and username must be strings",
           success: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -43,14 +54,14 @@ export async function POST(request: NextRequest) {
           error: "Username must be at least 3 characters long",
           success: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Check if database is configured
     if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
       console.warn(
-        "Database not configured, using mock response for username creation",
+        "Database not configured, using mock response for username creation"
       );
 
       // Mock response for testing
@@ -69,6 +80,7 @@ export async function POST(request: NextRequest) {
     // Using ON CONFLICT(username) DO NOTHING to handle race conditions gracefully
     // as specified in requirements
     // First try with new schema, fallback to old schema if columns don't exist
+    const turso = getTursoClient();
     let result;
     try {
       result = await turso.execute({
@@ -103,7 +115,7 @@ export async function POST(request: NextRequest) {
           error: "Username is already taken",
           conflict: true,
         },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -129,7 +141,7 @@ export async function POST(request: NextRequest) {
           error: "Username is already taken",
           conflict: true,
         },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -140,7 +152,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "User not found",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -155,7 +167,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Database connection error. Please try again.",
         },
-        { status: 503 },
+        { status: 503 }
       );
     }
 
@@ -167,7 +179,7 @@ export async function POST(request: NextRequest) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

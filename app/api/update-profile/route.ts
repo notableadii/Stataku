@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -25,21 +36,21 @@ export async function POST(request: NextRequest) {
     if (display_name !== undefined && typeof display_name !== "string") {
       return NextResponse.json(
         { error: "Display name must be a string" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     if (bio !== undefined && typeof bio !== "string") {
       return NextResponse.json(
         { error: "Bio must be a string" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     if (avatar_url !== undefined && typeof avatar_url !== "string") {
       return NextResponse.json(
         { error: "Avatar URL must be a string" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -47,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (bio && bio.length > 500) {
       return NextResponse.json(
         { error: "Bio must be 500 characters or less" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -55,7 +66,7 @@ export async function POST(request: NextRequest) {
     if (display_name && display_name.length > 50) {
       return NextResponse.json(
         { error: "Display name must be 50 characters or less" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -81,7 +92,7 @@ export async function POST(request: NextRequest) {
     if (updates.length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -89,6 +100,7 @@ export async function POST(request: NextRequest) {
     values.push(userId);
 
     // Update profile
+    const turso = getTursoClient();
     await turso.execute({
       sql: `UPDATE profiles SET ${updates.join(", ")} WHERE id = ?`,
       args: values,
@@ -122,7 +134,7 @@ export async function POST(request: NextRequest) {
     console.error("Error updating profile:", error);
     return NextResponse.json(
       { error: "Failed to update profile" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

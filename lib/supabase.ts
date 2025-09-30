@@ -61,9 +61,9 @@ export const signInWithDiscord = async () => {
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string
+  username: string,
 ): Promise<boolean> => {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("user_profiles")
     .select("username")
     .eq("username", username.toLowerCase())
@@ -117,14 +117,14 @@ export const getUserProfile = async (userId: string) => {
     }
 
     return { data: result.data, error: null };
-  } catch (error) {
+  } catch {
     return { data: null, error: { message: "Network error" } };
   }
 };
 
 export const updateUserProfile = async (
   userId: string,
-  updates: Partial<UserProfile>
+  updates: Partial<UserProfile>,
 ) => {
   // Use the API route instead of direct Supabase query since we're using Turso for profiles
   try {
@@ -151,7 +151,7 @@ export const updateUserProfile = async (
     }
 
     return { data: result.data, error: null };
-  } catch (error) {
+  } catch {
     return { data: null, error: { message: "Network error" } };
   }
 };

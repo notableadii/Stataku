@@ -82,18 +82,6 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
     }
   };
 
-  const handleProfileDropdownToggle = () => {
-    setIsProfileDropdownOpen(!isProfileDropdownOpen);
-  };
-
-  const getInitials = (username: string) => {
-    return username
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   // Get avatar source - use profile avatar_url if available, otherwise use universal avatar
   const getAvatarSrc = () => {

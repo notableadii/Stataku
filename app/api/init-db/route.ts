@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client on server side
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 export async function POST() {
   try {
+    const turso = getTursoClient();
     // Create profiles table as specified in requirements
     // id references auth.users(id) from Supabase
     await turso.execute(`
@@ -101,7 +113,7 @@ export async function POST() {
     console.error("Error initializing database schema:", error);
     return NextResponse.json(
       { error: "Failed to initialize database schema" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

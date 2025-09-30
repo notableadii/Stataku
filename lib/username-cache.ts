@@ -23,7 +23,7 @@ export class RealTimeUsernameChecker {
       loading: boolean,
     ) => void,
   ): Promise<void> {
-    const normalizedUsername = username.toLowerCase().trim();
+    const _normalizedUsername = username.toLowerCase().trim();
 
     // Clear existing timer
     if (this.debounceTimer) {

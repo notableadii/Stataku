@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
-// Initialize Turso client on server side
-const turso = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// Initialize Turso client lazily
+function getTursoClient() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !authToken) {
+    throw new Error(
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+    );
+  }
+
+  return createClient({
+    url,
+    authToken,
+  });
+}
 
 // Rate limiting storage (in production, use Redis or similar)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -74,7 +85,7 @@ export async function POST(request: NextRequest) {
           error: "Rate limit exceeded. Please try again later.",
           available: false,
         },
-        { status: 429 },
+        { status: 429 }
       );
     }
 
@@ -89,7 +100,7 @@ export async function POST(request: NextRequest) {
           error: "Username is required and must be a string",
           available: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -165,7 +176,7 @@ export async function POST(request: NextRequest) {
     // Check if database is configured
     if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
       console.warn(
-        "Database not configured, using mock data for username checking",
+        "Database not configured, using mock data for username checking"
       );
 
       // Mock some usernames as taken for testing
@@ -183,6 +194,7 @@ export async function POST(request: NextRequest) {
 
     // Check username availability using optimized query
     // Using LIMIT 1 to minimize read cost as specified
+    const turso = getTursoClient();
     const result = await turso.execute({
       sql: "SELECT 1 FROM profiles WHERE username = ? LIMIT 1",
       args: [normalizedUsername],
@@ -261,7 +273,7 @@ export async function POST(request: NextRequest) {
           error: "Internal server error",
           available: false,
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }

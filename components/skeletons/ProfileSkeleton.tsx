@@ -2,7 +2,6 @@
 
 import { Skeleton } from "@heroui/skeleton";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Avatar } from "@heroui/avatar";
 
 interface ProfileSkeletonProps {
   className?: string;

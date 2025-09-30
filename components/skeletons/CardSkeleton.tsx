@@ -13,7 +13,7 @@ interface CardSkeletonProps {
 
 export const CardSkeleton: React.FC<CardSkeletonProps> = ({
   className = "",
-  showImage = false,
+  showImage: _showImage = false,
   showChips = true,
   showProgress = false,
   showButton = true,
