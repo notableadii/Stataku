@@ -136,7 +136,7 @@ export default function DashboardPage() {
                 variant="flat"
                 size="lg"
                 className="h-16"
-                onClick={() => router.push(`/${profile.username}`)}
+                onClick={() => router.push(`/user/${profile.username}`)}
               >
                 View Profile
               </Button>

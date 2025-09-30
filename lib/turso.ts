@@ -8,12 +8,13 @@ export interface UserProfile {
   display_name?: string;
   bio?: string;
   avatar_url?: string;
+  banner_url?: string;
   created_at: string;
 }
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string,
+  username: string
 ): Promise<boolean> => {
   try {
     const response = await fetch("/api/check-username", {
@@ -110,7 +111,7 @@ export const getUserProfile = async (userId: string) => {
 
 export const updateUserProfile = async (
   _userId: string,
-  _updates: Partial<UserProfile>,
+  _updates: Partial<UserProfile>
 ) => {
   // TODO: Implement update profile API route if needed
   console.warn("updateUserProfile not implemented yet");

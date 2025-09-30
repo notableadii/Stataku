@@ -4,9 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
 import { UserProfile } from "@/lib/turso";
-import { notFound } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
 
@@ -17,6 +15,7 @@ export default function ProfilePage() {
   const { user, profile: currentUserProfile } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [usernameNotFound, setUsernameNotFound] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -42,8 +41,9 @@ export default function ProfilePage() {
 
         if (!response.ok) {
           if (response.status === 404) {
-            // Profile not found, trigger 404 page
-            notFound();
+            // Profile not found, show custom message
+            setUsernameNotFound(true);
+            return;
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -54,8 +54,8 @@ export default function ProfilePage() {
         if (data.data && data.data.username) {
           setProfile(data.data);
         } else {
-          // If profile data is invalid, trigger 404
-          notFound();
+          // If profile data is invalid, show custom message
+          setUsernameNotFound(true);
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -70,7 +70,8 @@ export default function ProfilePage() {
           errorMessage.includes("AbortError") ||
           (err instanceof Error && err.name === "AbortError")
         ) {
-          notFound();
+          setUsernameNotFound(true);
+          return;
         }
 
         setError(
@@ -82,16 +83,29 @@ export default function ProfilePage() {
     fetchProfile();
   }, [username]);
 
+  if (usernameNotFound) {
+    return (
+      <div className="min-h-screen flex items-start justify-center bg-background pt-20">
+        <div className="text-center">
+          <div className="text-default-300 text-6xl mb-4">👤</div>
+          <h1 className="text-2xl font-bold mb-2">No Username Found</h1>
+          <p className="text-default-500">
+            The username &quot;{username}&quot; does not exist or is not
+            available.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="max-w-md w-full">
-          <CardBody className="text-center py-8">
-            <div className="text-danger text-6xl mb-4">⚠️</div>
-            <h1 className="text-2xl font-bold mb-2">Error</h1>
-            <p className="text-default-500 mb-4">{error}</p>
-          </CardBody>
-        </Card>
+      <div className="min-h-screen flex items-start justify-center bg-background pt-20">
+        <div className="text-center">
+          <div className="text-danger text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold mb-2">Error</h1>
+          <p className="text-default-500">{error}</p>
+        </div>
       </div>
     );
   }
@@ -102,6 +116,14 @@ export default function ProfilePage() {
     return null;
   }
 
+  // Get banner source - use profile banner_url if available, otherwise use default banner
+  const getBannerSrc = () => {
+    if (profile?.banner_url) {
+      return profile.banner_url;
+    }
+    return "/banners/banner.jpg";
+  };
+
   // Check if the logged-in user is viewing their own profile
   const isOwnProfile =
     user &&
@@ -110,36 +132,48 @@ export default function ProfilePage() {
       currentUserProfile.username === profile.username);
 
   return (
-    <div className="min-h-screen bg-background py-2 sm:py-6 md:py-8">
-      <div className="container mx-auto max-w-full px-0 sm:px-6 lg:px-4">
-        {/* Profile Header */}
-        <div className="mb-4 sm:mb-10">
-          <div className="py-2 px-0 sm:p-6 md:p-8">
-            {/* Top Section: Avatar, Name/Username, and Edit Button */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 md:gap-6 mb-2 sm:mb-4">
-              {/* Avatar */}
+    <div className="min-h-screen bg-background">
+      <div className="w-full">
+        {/* Banner Section */}
+        <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden">
+          <img
+            src={getBannerSrc()}
+            alt="Profile banner"
+            className="w-full h-full object-cover"
+          />
+          {/* Overlay for better text readability if needed */}
+          <div className="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        {/* Profile Content Container */}
+        <div className="container mx-auto max-w-full px-0 sm:px-6 lg:px-4 -mt-16 sm:-mt-20 md:-mt-24 relative z-10">
+          {/* Profile Picture - Overlapping Banner */}
+          <div className="flex justify-center mb-4">
+            <div className="relative">
               <Avatar
                 src={profile?.avatar_url || "/api/avatar"}
-                className="w-20 h-20 sm:w-24 sm:h-24 text-large"
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 text-large border-4 border-background shadow-lg"
                 name={profile?.display_name || profile?.username}
                 isBordered
               />
+            </div>
+          </div>
 
+          {/* Profile Info Section */}
+          <div className="px-4 sm:px-6 md:px-8 pb-6">
+            {/* Name, Username, and Edit Button */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-4">
               {/* Profile Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col gap-1 mb-1 sm:mb-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold truncate">
-                    {profile?.display_name ||
-                      profile?.username ||
-                      "Unknown User"}
-                  </h1>
-                  <p className="text-default-500 text-base sm:text-lg truncate">
-                    @{profile?.username}
-                  </p>
-                </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1">
+                  {profile?.display_name || profile?.username || "Unknown User"}
+                </h1>
+                <p className="text-default-500 text-base sm:text-lg">
+                  @{profile?.username}
+                </p>
               </div>
 
-              {/* Edit Button - Right Side */}
+              {/* Edit Button */}
               {isOwnProfile && (
                 <Button
                   color="primary"
@@ -148,7 +182,7 @@ export default function ProfilePage() {
                     <PencilSquareIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   }
                   onPress={() => router.push("/profile")}
-                  className="w-full sm:w-auto self-start"
+                  className="w-full sm:w-auto"
                   size="sm"
                 >
                   <span className="sm:inline">Edit Profile</span>
@@ -156,14 +190,14 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Divider line - Spans full width */}
-            <div className="w-full h-px bg-divider mb-3 sm:mb-4"></div>
+            {/* Divider line */}
+            <div className="w-full h-px bg-divider mb-4"></div>
 
-            {/* Bottom Section: Bio and Member Since */}
-            <div>
+            {/* Bio and Member Since */}
+            <div className="text-center sm:text-left">
               {/* Bio */}
               {profile?.bio && (
-                <p className="text-default-600 mb-2 sm:mb-3 text-sm sm:text-base leading-relaxed">
+                <p className="text-default-600 mb-3 text-sm sm:text-base leading-relaxed">
                   {profile.bio}
                 </p>
               )}

@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
           display_name: null,
           bio: null,
           avatar_url: null,
+          banner_url: null,
           created_at: new Date().toISOString(),
         },
         mock: true,
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
     const turso = getTursoClient();
     const result = await turso.execute({
       sql: `
-        SELECT id, username, slug, display_name, bio, avatar_url, created_at 
+        SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at 
         FROM profiles 
         WHERE slug = ? 
         LIMIT 1
@@ -116,6 +117,7 @@ export async function POST(request: NextRequest) {
         display_name: profile.display_name as string | null,
         bio: profile.bio as string | null,
         avatar_url: profile.avatar_url as string | null,
+        banner_url: profile.banner_url as string | null,
         created_at: profile.created_at as string,
       },
     });

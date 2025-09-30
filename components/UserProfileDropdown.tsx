@@ -58,7 +58,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   };
 
   const handleProfileClick = () => {
-    router.push(`/${profile.username}`);
+    router.push(`/user/${profile.username}`);
   };
 
   const handleSettingsClick = () => {
@@ -81,7 +81,6 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
       onOpenChange(); // Close modal
     }
   };
-
 
   // Get avatar source - use profile avatar_url if available, otherwise use universal avatar
   const getAvatarSrc = () => {

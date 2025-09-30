@@ -20,7 +20,7 @@ export default function CreateUsernamePage() {
   // Redirect if user already has a profile
   useEffect(() => {
     if (!loading && user && profile) {
-      router.replace(`/${profile.username}`);
+      router.replace(`/user/${profile.username}`);
     }
   }, [user, profile, loading, router]);
 
@@ -54,7 +54,7 @@ export default function CreateUsernamePage() {
     // Small delay to ensure profile is updated and navbar reflects the change
     setTimeout(() => {
       // Redirect to user's profile page after successful username creation
-      router.push(`/${username}`);
+      router.push(`/user/${username}`);
     }, 1500);
   };
 

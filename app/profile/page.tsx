@@ -20,64 +20,17 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
   const [showAvatarTooltip, setShowAvatarTooltip] = useState(false);
+  const [showBannerTooltip, setShowBannerTooltip] = useState(false);
 
   const avatarUrlInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAvatarClick = () => {
-    if (avatarUrlInputRef.current) {
-      avatarUrlInputRef.current.focus();
-      setShowAvatarTooltip(true);
-      // Hide tooltip after 3 seconds
-      setTimeout(() => {
-        setShowAvatarTooltip(false);
-      }, 3000);
-    }
-  };
-
-  const handleAvatarUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAvatarUrl(e.target.value);
-    // Hide tooltip when user starts typing
-    if (showAvatarTooltip) {
-      setShowAvatarTooltip(false);
-    }
-  };
-
-  // Get avatar source - use current avatarUrl if available, otherwise use universal avatar
-  const getAvatarSrc = () => {
-    if (avatarUrl) {
-      return avatarUrl;
-    }
-    return "/avatars/universal-avatar.jpg";
-  };
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/signin");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (profile) {
-      const fullProfile = profile as UserProfile;
-      setDisplayName(fullProfile.display_name || "");
-      setBio(fullProfile.bio || "");
-      setAvatarUrl(fullProfile.avatar_url || "");
-    }
-  }, [profile]);
-
-  if (loading) {
-    return <ProfilePageSkeleton />;
-  }
-
-  if (!user || !profile) {
-    return null;
-  }
+  const bannerUrlInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
     setSaving(true);
@@ -98,6 +51,7 @@ export default function ProfilePage() {
           display_name: displayName.trim() || null,
           bio: bio.trim() || null,
           avatar_url: avatarUrl.trim() || null,
+          banner_url: bannerUrl.trim() || null,
         }),
       });
 
@@ -128,29 +82,139 @@ export default function ProfilePage() {
     }
   };
 
-  const hasChanges = profile
-    ? (() => {
-        const fullProfile = profile as UserProfile;
-        return (
-          displayName !== (fullProfile.display_name || "") ||
-          bio !== (fullProfile.bio || "") ||
-          avatarUrl !== (fullProfile.avatar_url || "")
-        );
-      })()
-    : false;
+  const getHasChanges = () => {
+    if (!profile) return false;
+    const fullProfile = profile as UserProfile;
+    return displayName !== (fullProfile.display_name || "") ||
+           bio !== (fullProfile.bio || "") ||
+           avatarUrl !== (fullProfile.avatar_url || "") ||
+           bannerUrl !== (fullProfile.banner_url || "");
+  };
+
+  const handleAvatarClick = () => {
+    if (avatarUrlInputRef.current) {
+      avatarUrlInputRef.current.focus();
+      setShowAvatarTooltip(true);
+      // Hide tooltip after 3 seconds
+      setTimeout(() => {
+        setShowAvatarTooltip(false);
+      }, 3000);
+    }
+  };
+
+  const handleAvatarUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAvatarUrl(e.target.value);
+    // Hide tooltip when user starts typing
+    if (showAvatarTooltip) {
+      setShowAvatarTooltip(false);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (bannerUrlInputRef.current) {
+      bannerUrlInputRef.current.focus();
+      setShowBannerTooltip(true);
+      // Hide tooltip after 3 seconds
+      setTimeout(() => {
+        setShowBannerTooltip(false);
+      }, 3000);
+    }
+  };
+
+  const handleBannerUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBannerUrl(e.target.value);
+    // Hide tooltip when user starts typing
+    if (showBannerTooltip) {
+      setShowBannerTooltip(false);
+    }
+  };
+
+  // Get avatar source - use current avatarUrl if available, otherwise use universal avatar
+  const getAvatarSrc = () => {
+    if (avatarUrl) {
+      return avatarUrl;
+    }
+    return "/avatars/universal-avatar.jpg";
+  };
+
+  // Get banner source - use current bannerUrl if available, otherwise use default banner
+  const getBannerSrc = () => {
+    if (bannerUrl) {
+      return bannerUrl;
+    }
+    return "/banners/banner.jpg";
+  };
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/signin");
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (profile) {
+      const fullProfile = profile as UserProfile;
+      setDisplayName(fullProfile.display_name || "");
+      setBio(fullProfile.bio || "");
+      setAvatarUrl(fullProfile.avatar_url || "");
+      setBannerUrl(fullProfile.banner_url || "");
+    }
+  }, [profile]);
+
+  if (loading) {
+    return <ProfilePageSkeleton />;
+  }
+
+  if (!user || !profile) {
+    return null;
+  }
+
+  const hasChanges = getHasChanges();
 
   return (
-    <div className="min-h-screen bg-background py-0 px-0 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-2 sm:mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
-            Edit Profile
-          </h1>
-          <p className="text-default-500 text-base sm:text-lg">
-            Customize your profile information
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* Banner Section - Full width on mobile */}
+      <div className="w-full mb-2 sm:mb-10 -mt-4 sm:-mt-6">
+        <div className="flex flex-col items-center">
+          <div className="relative w-full sm:max-w-2xl mb-4">
+            <div className="relative w-full h-32 sm:h-40 md:h-48 overflow-hidden rounded-lg border border-divider">
+              <img
+                src={getBannerSrc()}
+                alt="Profile banner preview"
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={handleBannerClick}
+                aria-label="Change banner"
+              >
+                <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </button>
+            </div>
+          </div>
+          <div className="text-center px-4 sm:px-0">
+            <p className="text-sm text-default-500 mb-1">Profile Banner</p>
+            <p className="text-xs text-default-400">
+              Click on the banner to change it
+            </p>
+          </div>
         </div>
+      </div>
+
+      <div className="py-0 px-0 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-2 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
+              Edit Profile
+            </h1>
+            <p className="text-default-500 text-base sm:text-lg">
+              Customize your profile information
+            </p>
+          </div>
+
+        <Divider className="my-6 sm:my-12" />
 
         {/* Avatar Section */}
         <div className="mb-2 sm:mb-10">
@@ -276,6 +340,39 @@ export default function ProfilePage() {
               Enter a URL to your profile picture
             </p>
           </div>
+
+          {/* Banner URL */}
+          <div>
+            <label
+              htmlFor="banner-url"
+              className="text-sm font-semibold text-foreground block mb-1.5"
+            >
+              Banner URL
+            </label>
+            <Tooltip
+              content="Change your banner from here"
+              isOpen={showBannerTooltip}
+              placement="top"
+              color="primary"
+              showArrow
+            >
+              <Input
+                id="banner-url"
+                ref={bannerUrlInputRef}
+                placeholder="https://example.com/banner.jpg"
+                value={bannerUrl}
+                onChange={handleBannerUrlChange}
+                type="url"
+                classNames={{
+                  input: "text-sm sm:text-base",
+                  inputWrapper: "h-11 sm:h-12",
+                }}
+              />
+            </Tooltip>
+            <p className="text-xs text-default-400 mt-1.5">
+              Enter a URL to your profile banner
+            </p>
+          </div>
         </div>
 
         <Divider className="my-6 sm:my-8" />
@@ -297,7 +394,7 @@ export default function ProfilePage() {
         <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 sm:justify-end">
           <Button
             variant="flat"
-            onPress={() => router.push(`/${profile.username}`)}
+            onPress={() => router.push(`/user/${profile.username}`)}
             size="lg"
             className="w-full sm:w-auto"
           >
@@ -320,7 +417,7 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-default-400">
             <p className="text-xs sm:text-sm">Profile URL</p>
             <a
-              href={`/${profile.username}`}
+              href={`/user/${profile.username}`}
               className="text-primary hover:underline text-xs sm:text-sm truncate"
             >
               /{profile.username}

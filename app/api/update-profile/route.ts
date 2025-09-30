@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    const { userId, display_name, bio, avatar_url } = body;
+    const { userId, display_name, bio, avatar_url, banner_url } = body;
 
     // Validate input
     if (!userId) {
@@ -50,6 +50,13 @@ export async function POST(request: NextRequest) {
     if (avatar_url !== undefined && typeof avatar_url !== "string") {
       return NextResponse.json(
         { error: "Avatar URL must be a string" },
+        { status: 400 }
+      );
+    }
+
+    if (banner_url !== undefined && typeof banner_url !== "string") {
+      return NextResponse.json(
+        { error: "Banner URL must be a string" },
         { status: 400 }
       );
     }
@@ -89,6 +96,11 @@ export async function POST(request: NextRequest) {
       values.push(avatar_url || null);
     }
 
+    if (banner_url !== undefined) {
+      updates.push("banner_url = ?");
+      values.push(banner_url || null);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },
@@ -123,6 +135,7 @@ export async function POST(request: NextRequest) {
       display_name: result.rows[0].display_name as string | null,
       bio: result.rows[0].bio as string | null,
       avatar_url: result.rows[0].avatar_url as string | null,
+      banner_url: result.rows[0].banner_url as string | null,
       created_at: result.rows[0].created_at as string,
     };
 

@@ -75,6 +75,17 @@ export async function POST() {
       `);
     }
 
+    // Check if banner_url column exists, if not add it
+    try {
+      await turso.execute(`SELECT banner_url FROM profiles LIMIT 1`);
+      console.log("Banner_url column already exists");
+    } catch (error) {
+      console.log("Adding banner_url column to profiles table");
+      await turso.execute(`
+        ALTER TABLE profiles ADD COLUMN banner_url TEXT
+      `);
+    }
+
     // Update existing profiles to have slug values (migration)
     try {
       await turso.execute(`

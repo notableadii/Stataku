@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     let result;
     try {
       result = await turso.execute({
-        sql: "SELECT id, username, slug, display_name, bio, avatar_url, created_at FROM profiles WHERE id = ?",
+        sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at FROM profiles WHERE id = ?",
         args: [userId],
       });
     } catch (error) {
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       display_name: (row as any).display_name || null,
       bio: (row as any).bio || null,
       avatar_url: (row as any).avatar_url || null,
+      banner_url: (row as any).banner_url || null,
       created_at: row.created_at as string,
     };
 
