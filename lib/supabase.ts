@@ -3,11 +3,30 @@ import { createClient } from "@supabase/supabase-js";
 // Initialize Supabase client lazily
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase Environment Variables Debug:", {
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? "✅ SET"
+        : "❌ NOT SET",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        ? "✅ SET"
+        : "❌ NOT SET",
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+        ? "✅ SET (OLD NAME)"
+        : "❌ NOT SET",
+    });
+
     throw new Error(
-      "Supabase configuration is missing. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_ANON_KEY environment variables."
+      `Supabase configuration is missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables. 
+      
+      Current status:
+      - NEXT_PUBLIC_SUPABASE_URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? "SET" : "NOT SET"}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "SET" : "NOT SET"}
+      - SUPABASE_ANON_KEY (old): ${process.env.SUPABASE_ANON_KEY ? "SET" : "NOT SET"}
+      
+      Make sure to use NEXT_PUBLIC_ prefix for client-side environment variables in Next.js.`
     );
   }
 
