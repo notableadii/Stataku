@@ -1,9 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Initialize Supabase client lazily
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Supabase configuration is missing. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_ANON_KEY environment variables."
+    );
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Export a getter that initializes the client when needed
+export const supabase = new Proxy({} as any, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    return client[prop as keyof typeof client];
+  },
+});
 
 // Database types
 export interface UserProfile {
@@ -19,7 +36,8 @@ export interface UserProfile {
 
 // Auth helper functions
 export const signUp = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signUp({
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signUp({
     email,
     password,
   });
@@ -27,7 +45,8 @@ export const signUp = async (email: string, password: string) => {
 };
 
 export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signInWithPassword({
     email,
     password,
   });
@@ -35,12 +54,14 @@ export const signIn = async (email: string, password: string) => {
 };
 
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
+  const client = getSupabaseClient();
+  const { error } = await client.auth.signOut();
   return { error };
 };
 
 export const signInWithGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: `${window.location.origin}/create-username`,
@@ -50,7 +71,8 @@ export const signInWithGoogle = async () => {
 };
 
 export const signInWithDiscord = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signInWithOAuth({
     provider: "discord",
     options: {
       redirectTo: `${window.location.origin}/create-username`,
@@ -61,9 +83,10 @@ export const signInWithDiscord = async () => {
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string,
+  username: string
 ): Promise<boolean> => {
-  const { error } = await supabase
+  const client = getSupabaseClient();
+  const { error } = await client
     .from("user_profiles")
     .select("username")
     .eq("username", username.toLowerCase())
@@ -124,7 +147,7 @@ export const getUserProfile = async (userId: string) => {
 
 export const updateUserProfile = async (
   userId: string,
-  updates: Partial<UserProfile>,
+  updates: Partial<UserProfile>
 ) => {
   // Use the API route instead of direct Supabase query since we're using Turso for profiles
   try {
