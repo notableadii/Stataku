@@ -162,7 +162,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Content Container */}
-        <div className="container mx-auto max-w-full px-0 sm:px-6 lg:px-4 -mt-16 sm:-mt-20 md:-mt-24 relative z-10">
+        <div className="w-full -mt-16 sm:-mt-20 md:-mt-24 relative z-10">
           {/* Profile Picture - Overlapping Banner */}
           <div className="flex justify-center mb-4">
             <div className="relative">
@@ -175,8 +175,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Profile Info Section */}
-          <div className="px-4 sm:px-6 md:px-8 pb-6">
+          {/* Profile Info Section - Full width like banner */}
+          <div className="w-full px-4 pb-6">
             {/* Name, Username, and Edit Button */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-4">
               {/* Profile Info */}
