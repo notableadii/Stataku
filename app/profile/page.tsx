@@ -85,10 +85,12 @@ export default function ProfilePage() {
   const getHasChanges = () => {
     if (!profile) return false;
     const fullProfile = profile as UserProfile;
-    return displayName !== (fullProfile.display_name || "") ||
-           bio !== (fullProfile.bio || "") ||
-           avatarUrl !== (fullProfile.avatar_url || "") ||
-           bannerUrl !== (fullProfile.banner_url || "");
+    return (
+      displayName !== (fullProfile.display_name || "") ||
+      bio !== (fullProfile.bio || "") ||
+      avatarUrl !== (fullProfile.avatar_url || "") ||
+      bannerUrl !== (fullProfile.banner_url || "")
+    );
   };
 
   const handleAvatarClick = () => {
@@ -214,214 +216,218 @@ export default function ProfilePage() {
             </p>
           </div>
 
-        <Divider className="my-6 sm:my-12" />
+          <Divider className="my-6 sm:my-12" />
 
-        {/* Avatar Section */}
-        <div className="mb-2 sm:mb-10">
-          <div className="flex flex-col items-center">
-            <button
-              type="button"
-              className="relative group mb-1 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
-              onClick={handleAvatarClick}
-              aria-label="Change avatar"
-            >
-              <Avatar
-                src={getAvatarSrc()}
-                className="w-24 h-24 sm:w-32 sm:h-32 text-large transition-transform group-hover:scale-105"
-                name={displayName || profile.username}
-                isBordered
-                color="primary"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+          {/* Avatar Section */}
+          <div className="mb-2 sm:mb-10">
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                className="relative group mb-1 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
+                onClick={handleAvatarClick}
+                aria-label="Change avatar"
+              >
+                <Avatar
+                  src={getAvatarSrc()}
+                  className="w-24 h-24 sm:w-32 sm:h-32 text-large transition-transform group-hover:scale-105"
+                  name={displayName || profile.username}
+                  isBordered
+                  color="primary"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+              </button>
+              <div className="text-center">
+                <p className="text-sm text-default-500 mb-1">
+                  @{profile.username}
+                </p>
+                <p className="text-xs text-default-400">
+                  Member since{" "}
+                  {new Date(profile.created_at).toLocaleDateString()}
+                </p>
               </div>
-            </button>
-            <div className="text-center">
-              <p className="text-sm text-default-500 mb-1">
-                @{profile.username}
-              </p>
-              <p className="text-xs text-default-400">
-                Member since {new Date(profile.created_at).toLocaleDateString()}
-              </p>
             </div>
           </div>
-        </div>
 
-        <Divider className="my-2 sm:my-8" />
+          <Divider className="my-2 sm:my-8" />
 
-        {/* Form Fields */}
-        <div className="space-y-3 sm:space-y-8">
-          {/* Display Name */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label
-                htmlFor="display-name"
-                className="text-sm font-semibold text-foreground"
-              >
-                Display Name
-              </label>
-              <span className="text-xs text-default-400">
-                {displayName.length}/50
-              </span>
-            </div>
-            <Input
-              id="display-name"
-              placeholder="Enter your display name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              maxLength={50}
-              classNames={{
-                input: "text-sm sm:text-base",
-                inputWrapper: "h-11 sm:h-12",
-              }}
-            />
-            <p className="text-xs text-default-400 mt-1.5">
-              This is how others will see your name
-            </p>
-          </div>
-
-          {/* Bio */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label
-                htmlFor="bio"
-                className="text-sm font-semibold text-foreground"
-              >
-                Bio
-              </label>
-              <span className="text-xs text-default-400">{bio.length}/500</span>
-            </div>
-            <Textarea
-              id="bio"
-              placeholder="Tell us about yourself..."
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={500}
-              minRows={4}
-              maxRows={8}
-              classNames={{
-                input: "text-sm sm:text-base",
-              }}
-            />
-            <p className="text-xs text-default-400 mt-1.5">
-              A brief description about you
-            </p>
-          </div>
-
-          {/* Avatar URL */}
-          <div>
-            <label
-              htmlFor="avatar-url"
-              className="text-sm font-semibold text-foreground block mb-1.5"
-            >
-              Avatar URL
-            </label>
-            <Tooltip
-              content="Change your avatar from here"
-              isOpen={showAvatarTooltip}
-              placement="top"
-              color="primary"
-              showArrow
-            >
+          {/* Form Fields */}
+          <div className="space-y-3 sm:space-y-8">
+            {/* Display Name */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="display-name"
+                  className="text-sm font-semibold text-foreground"
+                >
+                  Display Name
+                </label>
+                <span className="text-xs text-default-400">
+                  {displayName.length}/50
+                </span>
+              </div>
               <Input
-                id="avatar-url"
-                ref={avatarUrlInputRef}
-                placeholder="https://example.com/avatar.jpg"
-                value={avatarUrl}
-                onChange={handleAvatarUrlChange}
-                type="url"
+                id="display-name"
+                placeholder="Enter your display name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={50}
                 classNames={{
                   input: "text-sm sm:text-base",
                   inputWrapper: "h-11 sm:h-12",
                 }}
               />
-            </Tooltip>
-            <p className="text-xs text-default-400 mt-1.5">
-              Enter a URL to your profile picture
-            </p>
-          </div>
+              <p className="text-xs text-default-400 mt-1.5">
+                This is how others will see your name
+              </p>
+            </div>
 
-          {/* Banner URL */}
-          <div>
-            <label
-              htmlFor="banner-url"
-              className="text-sm font-semibold text-foreground block mb-1.5"
-            >
-              Banner URL
-            </label>
-            <Tooltip
-              content="Change your banner from here"
-              isOpen={showBannerTooltip}
-              placement="top"
-              color="primary"
-              showArrow
-            >
-              <Input
-                id="banner-url"
-                ref={bannerUrlInputRef}
-                placeholder="https://example.com/banner.jpg"
-                value={bannerUrl}
-                onChange={handleBannerUrlChange}
-                type="url"
+            {/* Bio */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="bio"
+                  className="text-sm font-semibold text-foreground"
+                >
+                  Bio
+                </label>
+                <span className="text-xs text-default-400">
+                  {bio.length}/500
+                </span>
+              </div>
+              <Textarea
+                id="bio"
+                placeholder="Tell us about yourself..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={500}
+                minRows={4}
+                maxRows={8}
                 classNames={{
                   input: "text-sm sm:text-base",
-                  inputWrapper: "h-11 sm:h-12",
                 }}
               />
-            </Tooltip>
-            <p className="text-xs text-default-400 mt-1.5">
-              Enter a URL to your profile banner
-            </p>
+              <p className="text-xs text-default-400 mt-1.5">
+                A brief description about you
+              </p>
+            </div>
+
+            {/* Avatar URL */}
+            <div>
+              <label
+                htmlFor="avatar-url"
+                className="text-sm font-semibold text-foreground block mb-1.5"
+              >
+                Avatar URL
+              </label>
+              <Tooltip
+                content="Change your avatar from here"
+                isOpen={showAvatarTooltip}
+                placement="top"
+                color="primary"
+                showArrow
+              >
+                <Input
+                  id="avatar-url"
+                  ref={avatarUrlInputRef}
+                  placeholder="https://example.com/avatar.jpg"
+                  value={avatarUrl}
+                  onChange={handleAvatarUrlChange}
+                  type="url"
+                  classNames={{
+                    input: "text-sm sm:text-base",
+                    inputWrapper: "h-11 sm:h-12",
+                  }}
+                />
+              </Tooltip>
+              <p className="text-xs text-default-400 mt-1.5">
+                Enter a URL to your profile picture
+              </p>
+            </div>
+
+            {/* Banner URL */}
+            <div>
+              <label
+                htmlFor="banner-url"
+                className="text-sm font-semibold text-foreground block mb-1.5"
+              >
+                Banner URL
+              </label>
+              <Tooltip
+                content="Change your banner from here"
+                isOpen={showBannerTooltip}
+                placement="top"
+                color="primary"
+                showArrow
+              >
+                <Input
+                  id="banner-url"
+                  ref={bannerUrlInputRef}
+                  placeholder="https://example.com/banner.jpg"
+                  value={bannerUrl}
+                  onChange={handleBannerUrlChange}
+                  type="url"
+                  classNames={{
+                    input: "text-sm sm:text-base",
+                    inputWrapper: "h-11 sm:h-12",
+                  }}
+                />
+              </Tooltip>
+              <p className="text-xs text-default-400 mt-1.5">
+                Enter a URL to your profile banner
+              </p>
+            </div>
           </div>
-        </div>
 
-        <Divider className="my-6 sm:my-8" />
+          <Divider className="my-6 sm:my-8" />
 
-        {/* Message */}
-        {message && (
-          <div
-            className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg ${
-              message.type === "success"
-                ? "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400"
-                : "bg-danger-50 text-danger-700 dark:bg-danger-900/20 dark:text-danger-400"
-            }`}
-          >
-            <p className="text-xs sm:text-sm font-medium">{message.text}</p>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 sm:justify-end">
-          <Button
-            variant="flat"
-            onPress={() => router.push(`/user/${profile.username}`)}
-            size="lg"
-            className="w-full sm:w-auto"
-          >
-            Cancel
-          </Button>
-          <Button
-            color="primary"
-            onPress={handleSave}
-            isLoading={saving}
-            isDisabled={!hasChanges || saving}
-            size="lg"
-            className="font-semibold w-full sm:w-auto"
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-divider">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-default-400">
-            <p className="text-xs sm:text-sm">Profile URL</p>
-            <a
-              href={`/user/${profile.username}`}
-              className="text-primary hover:underline text-xs sm:text-sm truncate"
+          {/* Message */}
+          {message && (
+            <div
+              className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg ${
+                message.type === "success"
+                  ? "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400"
+                  : "bg-danger-50 text-danger-700 dark:bg-danger-900/20 dark:text-danger-400"
+              }`}
             >
-              /{profile.username}
-            </a>
+              <p className="text-xs sm:text-sm font-medium">{message.text}</p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 sm:justify-end">
+            <Button
+              variant="flat"
+              onPress={() => router.push(`/user/${profile.username}`)}
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleSave}
+              isLoading={saving}
+              isDisabled={!hasChanges || saving}
+              size="lg"
+              className="font-semibold w-full sm:w-auto"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+
+          {/* Footer Info */}
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-divider">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-default-400">
+              <p className="text-xs sm:text-sm">Profile URL</p>
+              <a
+                href={`/user/${profile.username}`}
+                className="text-primary hover:underline text-xs sm:text-sm truncate"
+              >
+                /{profile.username}
+              </a>
+            </div>
           </div>
         </div>
       </div>
