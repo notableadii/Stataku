@@ -118,10 +118,26 @@ export default function ProfilePage() {
 
   // Get banner source - use profile banner_url if available, otherwise use default banner
   const getBannerSrc = () => {
-    if (profile?.banner_url) {
+    if (profile?.banner_url && profile.banner_url.trim() !== "") {
       return profile.banner_url;
     }
     return "/banners/banner.jpg";
+  };
+
+  // Get avatar source - use profile avatar_url if available, otherwise use universal avatar
+  const getAvatarSrc = () => {
+    if (profile?.avatar_url && profile.avatar_url.trim() !== "") {
+      return profile.avatar_url;
+    }
+    return "/avatars/universal-avatar.jpg";
+  };
+
+  // Get display name - use profile display_name if available, otherwise use username
+  const getDisplayName = () => {
+    if (profile?.display_name && profile.display_name.trim() !== "") {
+      return profile.display_name;
+    }
+    return profile?.username || "Unknown User";
   };
 
   // Check if the logged-in user is viewing their own profile
@@ -135,7 +151,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         {/* Banner Section */}
-        <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden">
+        <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded-lg sm:rounded-none">
           <img
             src={getBannerSrc()}
             alt="Profile banner"
@@ -151,9 +167,9 @@ export default function ProfilePage() {
           <div className="flex justify-center mb-4">
             <div className="relative">
               <Avatar
-                src={profile?.avatar_url || "/api/avatar"}
+                src={getAvatarSrc()}
                 className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 text-large border-4 border-background shadow-lg"
-                name={profile?.display_name || profile?.username}
+                name={getDisplayName()}
                 isBordered
               />
             </div>
@@ -166,7 +182,7 @@ export default function ProfilePage() {
               {/* Profile Info */}
               <div className="flex-1 text-center sm:text-left">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1">
-                  {profile?.display_name || profile?.username || "Unknown User"}
+                  {getDisplayName()}
                 </h1>
                 <p className="text-default-500 text-base sm:text-lg">
                   @{profile?.username}
@@ -196,7 +212,7 @@ export default function ProfilePage() {
             {/* Bio and Member Since */}
             <div className="text-center sm:text-left">
               {/* Bio */}
-              {profile?.bio && (
+              {profile?.bio && profile.bio.trim() !== "" && (
                 <p className="text-default-600 mb-3 text-sm sm:text-base leading-relaxed">
                   {profile.bio}
                 </p>

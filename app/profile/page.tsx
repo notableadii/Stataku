@@ -85,11 +85,23 @@ export default function ProfilePage() {
   const getHasChanges = () => {
     if (!profile) return false;
     const fullProfile = profile as UserProfile;
+
+    // Normalize empty strings to null for comparison
+    const currentDisplayName = displayName.trim() || null;
+    const currentBio = bio.trim() || null;
+    const currentAvatarUrl = avatarUrl.trim() || null;
+    const currentBannerUrl = bannerUrl.trim() || null;
+
+    const profileDisplayName = fullProfile.display_name?.trim() || null;
+    const profileBio = fullProfile.bio?.trim() || null;
+    const profileAvatarUrl = fullProfile.avatar_url?.trim() || null;
+    const profileBannerUrl = fullProfile.banner_url?.trim() || null;
+
     return (
-      displayName !== (fullProfile.display_name || "") ||
-      bio !== (fullProfile.bio || "") ||
-      avatarUrl !== (fullProfile.avatar_url || "") ||
-      bannerUrl !== (fullProfile.banner_url || "")
+      currentDisplayName !== profileDisplayName ||
+      currentBio !== profileBio ||
+      currentAvatarUrl !== profileAvatarUrl ||
+      currentBannerUrl !== profileBannerUrl
     );
   };
 
@@ -133,7 +145,7 @@ export default function ProfilePage() {
 
   // Get avatar source - use current avatarUrl if available, otherwise use universal avatar
   const getAvatarSrc = () => {
-    if (avatarUrl) {
+    if (avatarUrl && avatarUrl.trim() !== "") {
       return avatarUrl;
     }
     return "/avatars/universal-avatar.jpg";
@@ -141,10 +153,18 @@ export default function ProfilePage() {
 
   // Get banner source - use current bannerUrl if available, otherwise use default banner
   const getBannerSrc = () => {
-    if (bannerUrl) {
+    if (bannerUrl && bannerUrl.trim() !== "") {
       return bannerUrl;
     }
     return "/banners/banner.jpg";
+  };
+
+  // Get display name - use current displayName if available, otherwise use username
+  const getDisplayName = () => {
+    if (displayName && displayName.trim() !== "") {
+      return displayName;
+    }
+    return profile?.username || "Unknown User";
   };
 
   useEffect(() => {
@@ -175,8 +195,22 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="py-4 px-4 sm:py-6 sm:px-6 lg:py-8 lg:px-8 -mt-4 sm:-mt-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-2 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
+              Edit Profile
+            </h1>
+            <p className="text-default-500 text-base sm:text-lg">
+              Customize your profile information
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Banner Section - Full width on mobile */}
-      <div className="w-full mb-2 sm:mb-10 -mt-4 sm:-mt-6">
+      <div className="w-full mb-2 sm:mb-10">
         <div className="flex flex-col items-center">
           <div className="relative w-full sm:max-w-2xl mb-4">
             <div className="relative w-full h-32 sm:h-40 md:h-48 overflow-hidden rounded-lg border border-divider">
@@ -206,17 +240,7 @@ export default function ProfilePage() {
 
       <div className="py-0 px-0 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-2 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
-              Edit Profile
-            </h1>
-            <p className="text-default-500 text-base sm:text-lg">
-              Customize your profile information
-            </p>
-          </div>
-
-          <Divider className="my-6 sm:my-12" />
+          <Divider className="my-4 sm:-mt-3 sm:mb-12" />
 
           {/* Avatar Section */}
           <div className="mb-2 sm:mb-10">
@@ -230,7 +254,7 @@ export default function ProfilePage() {
                 <Avatar
                   src={getAvatarSrc()}
                   className="w-24 h-24 sm:w-32 sm:h-32 text-large transition-transform group-hover:scale-105"
-                  name={displayName || profile.username}
+                  name={getDisplayName()}
                   isBordered
                   color="primary"
                 />
