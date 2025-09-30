@@ -140,10 +140,10 @@ export default function ProfilePage() {
     : false;
 
   return (
-    <div className="min-h-screen bg-background py-4 px-4 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background py-0 px-0 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-2 sm:mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
             Edit Profile
           </h1>
@@ -153,11 +153,11 @@ export default function ProfilePage() {
         </div>
 
         {/* Avatar Section */}
-        <div className="mb-8 sm:mb-10">
+        <div className="mb-2 sm:mb-10">
           <div className="flex flex-col items-center">
             <button
               type="button"
-              className="relative group mb-4 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
+              className="relative group mb-1 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
               onClick={handleAvatarClick}
               aria-label="Change avatar"
             >
@@ -183,10 +183,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <Divider className="my-6 sm:my-8" />
+        <Divider className="my-2 sm:my-8" />
 
         {/* Form Fields */}
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-3 sm:space-y-8">
           {/* Display Name */}
           <div>
             <div className="flex items-center justify-between mb-1.5">

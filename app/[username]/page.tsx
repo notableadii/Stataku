@@ -110,11 +110,11 @@ export default function ProfilePage() {
       currentUserProfile.username === profile.username);
 
   return (
-    <div className="min-h-screen bg-background py-1 sm:py-6 md:py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-4">
+    <div className="min-h-screen bg-background py-2 sm:py-6 md:py-8">
+      <div className="container mx-auto max-w-full px-0 sm:px-6 lg:px-4">
         {/* Profile Header */}
-        <div className="mb-6 sm:mb-10">
-          <div className="py-4 px-0 sm:p-6 md:p-8">
+        <div className="mb-4 sm:mb-10">
+          <div className="py-2 px-0 sm:p-6 md:p-8">
             {/* Top Section: Avatar, Name/Username, and Edit Button */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 md:gap-6 mb-2 sm:mb-4">
               {/* Avatar */}
@@ -181,10 +181,10 @@ export default function ProfilePage() {
 
         {/* Activity Section */}
         <div>
-          <div className="py-4 px-0 sm:p-6 border-b border-divider/50">
+          <div className="py-2 px-0 sm:p-6 border-b border-divider/50">
             <h2 className="text-lg sm:text-xl font-semibold">Activity</h2>
           </div>
-          <div className="py-6 px-0 sm:p-6 md:p-8">
+          <div className="py-2 px-0 sm:p-6 md:p-8">
             <div className="flex items-center justify-center py-8 sm:py-12">
               <div className="text-center px-4">
                 <div className="text-default-300 text-5xl sm:text-6xl mb-3 sm:mb-4">
