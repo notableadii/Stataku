@@ -55,7 +55,9 @@ export function GlobalLoadingSpinner({ isVisible }: GlobalLoadingSpinnerProps) {
     >
       <div className="text-center">
         {/* Stataku text above spinner - no animation */}
-        <h1 className={`text-5xl font-bold ${textColor} mb-12 tracking-wider`}>
+        <h1
+          className={`text-6xl font-waterlily ${textColor} mb-12 tracking-wider`}
+        >
           Stataku
         </h1>
 

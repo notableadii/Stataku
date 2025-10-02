@@ -15,6 +15,7 @@ const config = {
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+        waterlily: ["var(--font-waterlily)"],
       },
     },
   },
