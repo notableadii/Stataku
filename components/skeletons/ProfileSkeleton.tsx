@@ -69,9 +69,21 @@ export const UserProfileSkeleton: React.FC<{ className?: string }> = ({
 export const ProfilePageSkeleton: React.FC<{ className?: string }> = ({
   className,
 }) => (
-  <div className={`container mx-auto px-4 py-8 ${className}`}>
-    <div className="max-w-2xl mx-auto">
-      <Skeleton className="h-8 w-32 mb-8 rounded-lg" />
+  <div className={`min-h-screen bg-background ${className}`}>
+    <div className="container mx-auto px-2 xs:px-4 py-4 xs:py-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-4 xs:mb-8">
+          <div className="mb-4">
+            <Skeleton className="h-8 xs:h-10 w-48 rounded-lg" />
+            <Skeleton className="h-4 w-80 xs:w-96 mt-2 rounded" />
+          </div>
+          {/* Mobile-only divider */}
+          <div className="w-full h-px bg-divider xs:hidden" />
+        </div>
+      </div>
+    </div>
+    <div className="container mx-auto px-2 xs:px-4">
+      <div className="max-w-2xl mx-auto">
 
       <Card>
         <CardHeader className="flex flex-col items-center gap-4 pb-4">
@@ -94,6 +106,7 @@ export const ProfilePageSkeleton: React.FC<{ className?: string }> = ({
           </div>
         </CardBody>
       </Card>
+      </div>
     </div>
   </div>
 );

@@ -68,7 +68,7 @@ export default function ProfileSettingsPage() {
           const cacheNames = await caches.keys();
 
           await Promise.all(
-            cacheNames.map((cacheName) => caches.delete(cacheName)),
+            cacheNames.map((cacheName) => caches.delete(cacheName))
           );
           console.log("✅ Browser caches cleared");
         } catch (error) {
@@ -220,24 +220,28 @@ export default function ProfileSettingsPage() {
       <SettingsNav />
 
       {/* Header */}
-      <div className="py-4 px-4 sm:py-6 sm:px-6 lg:py-8 lg:px-8 -mt-4 sm:-mt-6">
+      <div className="container mx-auto px-2 xs:px-4 py-4 xs:py-8">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-2 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
-              Profile Settings
-            </h1>
-            <p className="text-default-500 text-base sm:text-lg">
-              Customize your profile information
-            </p>
+          <div className="mb-4 xs:mb-8">
+            <div className="mb-4">
+              <h1 className="text-2xl xs:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Profile Settings
+              </h1>
+              <p className="text-default-500 mt-1 text-sm xs:text-base">
+                Customize your profile information
+              </p>
+            </div>
+            {/* Mobile-only divider */}
+            <div className="w-full h-px bg-divider xs:hidden" />
           </div>
         </div>
       </div>
 
       {/* Banner Section - Full width on mobile */}
-      <div className="w-full mb-2 sm:mb-10">
+      <div className="w-full mb-4 xs:mb-10">
         <div className="flex flex-col items-center">
-          <div className="relative w-full sm:max-w-2xl mb-4">
-            <div className="relative w-full h-32 sm:h-40 md:h-48 overflow-hidden rounded-lg border border-divider">
+          <div className="relative w-full xs:max-w-2xl mb-4">
+            <div className="relative w-full h-32 xs:h-40 sm:h-48 overflow-hidden rounded-lg border border-divider">
               <img
                 alt="Profile banner preview"
                 className="w-full h-full object-cover"
@@ -249,11 +253,11 @@ export default function ProfileSettingsPage() {
                 type="button"
                 onClick={handleBannerClick}
               >
-                <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                <CameraIcon className="w-6 h-6 xs:w-8 xs:h-8 text-white" />
               </button>
             </div>
           </div>
-          <div className="text-center px-4 sm:px-0">
+          <div className="text-center px-4 xs:px-0">
             <p className="text-sm text-default-500 mb-1">Profile Banner</p>
             <p className="text-xs text-default-400">
               Click on the banner to change it
@@ -262,46 +266,43 @@ export default function ProfileSettingsPage() {
         </div>
       </div>
 
-      <div className="py-0 px-0 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
+      <div className="container mx-auto px-2 xs:px-4">
         <div className="max-w-6xl mx-auto">
-          <Divider className="my-4 sm:-mt-3 sm:mb-12" />
+          <Divider className="my-4 xs:-mt-3 xs:mb-12" />
 
           {/* Avatar Section */}
-          <div className="mb-2 sm:mb-10">
+          <div className="mb-4 xs:mb-10">
             <div className="flex flex-col items-center">
               <button
                 aria-label="Change avatar"
-                className="relative group mb-1 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
+                className="relative group mb-1 xs:mb-6 cursor-pointer bg-transparent border-none p-0"
                 type="button"
                 onClick={handleAvatarClick}
               >
                 <Avatar
                   isBordered
-                  className="w-24 h-24 sm:w-32 sm:h-32 text-large transition-transform group-hover:scale-105"
+                  className="w-24 h-24 xs:w-32 xs:h-32 text-large transition-transform group-hover:scale-105"
                   color="primary"
                   name={getDisplayName()}
                   src={getAvatarSrc()}
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                  <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  <CameraIcon className="w-6 h-6 xs:w-8 xs:h-8 text-white" />
                 </div>
               </button>
-              <div className="text-center">
-                <p className="text-sm text-default-500 mb-1">
-                  @{profile.username}
-                </p>
+              <div className="text-center px-4 xs:px-0 mt-3 xs:mt-0">
+                <p className="text-sm text-default-500 mb-1">Profile Avatar</p>
                 <p className="text-xs text-default-400">
-                  Member since{" "}
-                  {new Date(profile.created_at).toLocaleDateString()}
+                  Click on the avatar to change it
                 </p>
               </div>
             </div>
           </div>
 
-          <Divider className="my-2 sm:my-8" />
+          <Divider className="my-4 xs:my-8" />
 
           {/* Form Fields */}
-          <div className="space-y-3 sm:space-y-8">
+          <div className="space-y-4 xs:space-y-8">
             {/* Display Name */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -317,8 +318,8 @@ export default function ProfileSettingsPage() {
               </div>
               <Input
                 classNames={{
-                  input: "text-sm sm:text-base",
-                  inputWrapper: "h-11 sm:h-12",
+                  input: "text-sm xs:text-base",
+                  inputWrapper: "h-11 xs:h-12",
                 }}
                 id="display-name"
                 maxLength={50}
@@ -346,7 +347,7 @@ export default function ProfileSettingsPage() {
               </div>
               <Textarea
                 classNames={{
-                  input: "text-sm sm:text-base",
+                  input: "text-sm xs:text-base",
                 }}
                 id="bio"
                 maxLength={500}
@@ -379,8 +380,8 @@ export default function ProfileSettingsPage() {
                 <Input
                   ref={avatarUrlInputRef}
                   classNames={{
-                    input: "text-sm sm:text-base",
-                    inputWrapper: "h-11 sm:h-12",
+                    input: "text-sm xs:text-base",
+                    inputWrapper: "h-11 xs:h-12",
                   }}
                   id="avatar-url"
                   placeholder="https://example.com/avatar.jpg"
@@ -412,8 +413,8 @@ export default function ProfileSettingsPage() {
                 <Input
                   ref={bannerUrlInputRef}
                   classNames={{
-                    input: "text-sm sm:text-base",
-                    inputWrapper: "h-11 sm:h-12",
+                    input: "text-sm xs:text-base",
+                    inputWrapper: "h-11 xs:h-12",
                   }}
                   id="banner-url"
                   placeholder="https://example.com/banner.jpg"
@@ -428,7 +429,7 @@ export default function ProfileSettingsPage() {
             </div>
           </div>
 
-          <Divider className="my-6 sm:my-8" />
+          <Divider className="my-6 xs:my-8" />
 
           {/* Message */}
           {message && (
@@ -466,11 +467,13 @@ export default function ProfileSettingsPage() {
           </div>
 
           {/* Footer Info */}
-          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-divider">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-default-400">
-              <p className="text-xs sm:text-sm">Profile URL</p>
+          <div className="mt-6 xs:mt-12 pt-4 xs:pt-8 border-t border-divider">
+            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-4">
+              <p className="text-sm xs:text-base font-medium text-default-600">
+                Profile URL
+              </p>
               <a
-                className="text-primary hover:underline text-xs sm:text-sm truncate"
+                className="text-primary hover:underline text-sm xs:text-base truncate font-mono"
                 href={`/user/${profile.username}`}
               >
                 /{profile.username}
