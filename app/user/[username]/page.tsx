@@ -198,7 +198,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         {/* Banner Section */}
-        <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded-lg sm:rounded-none">
+        <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded-lg">
           <img
             alt="Profile banner"
             className="w-full h-full object-cover"
