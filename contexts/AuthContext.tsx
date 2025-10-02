@@ -124,6 +124,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error("Error loading user profile:", error);
+
+          // Check if it's an authentication error
+          if (
+            error.message.includes("No active session") ||
+            error.message.includes("Session expired") ||
+            error.message.includes("Authentication required")
+          ) {
+            // Try to refresh the session silently
+            try {
+              const { data: refreshData, error: refreshError } =
+                await supabase.auth.refreshSession();
+
+              if (!refreshError && refreshData.session) {
+                // Session refreshed successfully, retry profile loading
+                const { data: retryData, error: retryError } =
+                  await getUserProfile(userId);
+
+                if (!retryError && retryData) {
+                  setProfile(retryData);
+                  return;
+                }
+              }
+            } catch (refreshError) {
+              console.error("Failed to refresh session:", refreshError);
+            }
+          }
+
           setProfile(null);
         } else {
           setProfile(data);

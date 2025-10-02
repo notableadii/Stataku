@@ -94,14 +94,67 @@ export const getUserProfile = async (userId: string) => {
     // Get the current session token for authentication
     const {
       data: { session },
+      error: sessionError,
     } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      return {
+        data: null,
+        error: new Error("Session error: " + sessionError.message),
+      };
+    }
+
     const token = session?.access_token;
 
-    if (!token) {
+    if (!token || !session) {
+      console.warn("No active session or token found");
       return {
         data: null,
         error: new Error("No active session"),
       };
+    }
+
+    // Check if the session is expired
+    const now = Math.floor(Date.now() / 1000);
+    if (session.expires_at && session.expires_at < now) {
+      console.warn("Session expired, attempting to refresh");
+
+      // Try to refresh the session
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.refreshSession();
+
+      if (refreshError || !refreshData.session) {
+        console.error("Failed to refresh session:", refreshError);
+        return {
+          data: null,
+          error: new Error("Session expired and refresh failed"),
+        };
+      }
+
+      // Use the refreshed token
+      const refreshedToken = refreshData.session.access_token;
+
+      const response = await fetch("/api/get-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshedToken}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("API request failed:", response.status, data);
+        return {
+          data: null,
+          error: new Error(data.error || "Failed to get profile"),
+        };
+      }
+
+      return { data: data.data, error: data.error };
     }
 
     const response = await fetch("/api/get-profile", {
@@ -116,6 +169,7 @@ export const getUserProfile = async (userId: string) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error("API request failed:", response.status, data);
       return {
         data: null,
         error: new Error(data.error || "Failed to get profile"),
@@ -142,14 +196,67 @@ export const getUserProfileNoCache = async (userId: string) => {
     // Get the current session token for authentication
     const {
       data: { session },
+      error: sessionError,
     } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      return {
+        data: null,
+        error: new Error("Session error: " + sessionError.message),
+      };
+    }
+
     const token = session?.access_token;
 
-    if (!token) {
+    if (!token || !session) {
+      console.warn("No active session or token found");
       return {
         data: null,
         error: new Error("No active session"),
       };
+    }
+
+    // Check if the session is expired
+    const now = Math.floor(Date.now() / 1000);
+    if (session.expires_at && session.expires_at < now) {
+      console.warn("Session expired, attempting to refresh");
+
+      // Try to refresh the session
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.refreshSession();
+
+      if (refreshError || !refreshData.session) {
+        console.error("Failed to refresh session:", refreshError);
+        return {
+          data: null,
+          error: new Error("Session expired and refresh failed"),
+        };
+      }
+
+      // Use the refreshed token
+      const refreshedToken = refreshData.session.access_token;
+
+      const response = await fetch("/api/get-profile-no-cache", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshedToken}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("API request failed:", response.status, data);
+        return {
+          data: null,
+          error: new Error(data.error || "Failed to get profile"),
+        };
+      }
+
+      return { data: data.data, error: data.error };
     }
 
     const response = await fetch("/api/get-profile-no-cache", {
@@ -164,6 +271,7 @@ export const getUserProfileNoCache = async (userId: string) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error("API request failed:", response.status, data);
       return {
         data: null,
         error: new Error(data.error || "Failed to get profile"),

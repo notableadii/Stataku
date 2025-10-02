@@ -12,13 +12,22 @@ import { CameraIcon } from "@heroicons/react/24/outline";
 
 import { ProfilePageSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserProfile, updateUserProfile } from "@/lib/turso";
+import {
+  UserProfile,
+  updateUserProfile,
+  getUserProfileNoCache,
+} from "@/lib/turso";
 import SettingsNav from "@/components/SettingsNav";
 import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function ProfileSettingsPage() {
-  const { user, profile, loading, forceRefreshProfile } = useAuth();
+  const { user, loading, forceRefreshProfile } = useAuth();
   const router = useRouter();
+
+  // Local profile state - fetched directly from database without cache
+  const [localProfile, setLocalProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [formInitialized, setFormInitialized] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -39,6 +48,61 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     logPageVisit("Profile Settings", PAGE_MESSAGES["Profile Settings"]);
   }, []);
+
+  // Fetch profile data directly from database (no cache) when component mounts
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user?.id) return;
+
+      try {
+        setProfileLoading(true);
+        console.log("🔄 Fetching fresh profile data from database (no cache)");
+
+        const result = await getUserProfileNoCache(user.id);
+
+        if (result.error) {
+          console.error("Error fetching profile:", result.error);
+          setMessage({
+            type: "error",
+            text: "Failed to load profile data",
+          });
+          return;
+        }
+
+        if (result.data) {
+          setLocalProfile(result.data as UserProfile);
+          console.log("✅ Fresh profile data loaded successfully");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        setMessage({
+          type: "error",
+          text: "Failed to load profile data",
+        });
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    if (user?.id && !loading) {
+      fetchProfileData();
+    }
+  }, [user?.id, loading]);
+
+  // Initialize form fields only once when profile data is loaded
+  useEffect(() => {
+    if (localProfile && !formInitialized) {
+      console.log("📝 Initializing form fields with fresh profile data");
+
+      setDisplayName(localProfile.display_name || "");
+      setBio(localProfile.bio || "");
+      setAvatarUrl(localProfile.avatar_url || "");
+      setBannerUrl(localProfile.banner_url || "");
+      setFormInitialized(true);
+
+      console.log("✅ Form fields initialized successfully");
+    }
+  }, [localProfile, formInitialized]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -99,8 +163,7 @@ export default function ProfileSettingsPage() {
   };
 
   const getHasChanges = () => {
-    if (!profile) return false;
-    const fullProfile = profile as UserProfile;
+    if (!localProfile) return false;
 
     // Normalize empty strings to null for comparison
     const currentDisplayName = displayName.trim() || null;
@@ -108,10 +171,10 @@ export default function ProfileSettingsPage() {
     const currentAvatarUrl = avatarUrl.trim() || null;
     const currentBannerUrl = bannerUrl.trim() || null;
 
-    const profileDisplayName = fullProfile.display_name?.trim() || null;
-    const profileBio = fullProfile.bio?.trim() || null;
-    const profileAvatarUrl = fullProfile.avatar_url?.trim() || null;
-    const profileBannerUrl = fullProfile.banner_url?.trim() || null;
+    const profileDisplayName = localProfile.display_name?.trim() || null;
+    const profileBio = localProfile.bio?.trim() || null;
+    const profileAvatarUrl = localProfile.avatar_url?.trim() || null;
+    const profileBannerUrl = localProfile.banner_url?.trim() || null;
 
     return (
       currentDisplayName !== profileDisplayName ||
@@ -183,7 +246,7 @@ export default function ProfileSettingsPage() {
       return displayName;
     }
 
-    return profile?.username || "Unknown User";
+    return localProfile?.username || "Unknown User";
   };
 
   useEffect(() => {
@@ -192,23 +255,31 @@ export default function ProfileSettingsPage() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    if (profile) {
-      const fullProfile = profile as UserProfile;
-
-      setDisplayName(fullProfile.display_name || "");
-      setBio(fullProfile.bio || "");
-      setAvatarUrl(fullProfile.avatar_url || "");
-      setBannerUrl(fullProfile.banner_url || "");
-    }
-  }, [profile]);
-
-  if (loading) {
+  // Show loading skeleton while auth is loading or profile is being fetched
+  if (loading || profileLoading) {
     return <ProfilePageSkeleton />;
   }
 
-  if (!user || !profile) {
+  // Redirect to signin if no user
+  if (!user) {
     return null;
+  }
+
+  // Show error message if profile failed to load
+  if (!localProfile && !profileLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Failed to Load Profile</h1>
+          <p className="text-default-500 mb-4">
+            Unable to load your profile data. Please try refreshing the page.
+          </p>
+          <Button color="primary" onPress={() => window.location.reload()}>
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const hasChanges = getHasChanges();
@@ -449,7 +520,7 @@ export default function ProfileSettingsPage() {
               className="w-full sm:w-auto"
               size="lg"
               variant="flat"
-              onPress={() => router.push(`/user/${profile.username}`)}
+              onPress={() => router.push(`/user/${localProfile?.username}`)}
             >
               Cancel
             </Button>
@@ -473,9 +544,9 @@ export default function ProfileSettingsPage() {
               </p>
               <a
                 className="text-primary hover:underline text-sm xs:text-base truncate font-mono"
-                href={`/user/${profile.username}`}
+                href={`/user/${localProfile?.username}`}
               >
-                /{profile.username}
+                /{localProfile?.username}
               </a>
             </div>
           </div>
