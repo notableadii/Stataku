@@ -3,116 +3,130 @@
  */
 
 export const logPageVisit = (pageName: string, customMessage?: string) => {
-  // Only run in browser environment
-  if (typeof window === "undefined") return;
-
-  const faviconUrl = "/favicon.ico";
-  const defaultMessage = `Welcome to ${pageName}`;
-  const message = customMessage || defaultMessage;
-
-  // Create a styled console log with the favicon
-  const styles = [
-    "color: #6366f1",
-    "font-size: 16px",
-    "font-weight: bold",
-    "text-shadow: 1px 1px 2px rgba(0,0,0,0.3)",
-    "padding: 10px",
-    "border: 2px solid #6366f1",
-    "border-radius: 8px",
-    "background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-    "margin: 10px 0",
-  ].join(";");
-
-  // Log the beautiful header
-  console.log(
-    `%c
-    🎌 ===== ${pageName} Console Log =====
-    
-    ${message}
-    
-    ===================================
-    `,
-    styles
-  );
-
-  // Display favicon using multiple methods for better browser compatibility
-  try {
-    // Method 1: Try to display as background image (works in Chrome/Edge)
-    console.log(
-      "%c🎌 FAVICON",
-      `font-size: 12px; 
-       font-weight: bold;
-       color: #6366f1;
-       padding: 20px 40px; 
-       background-image: url("${faviconUrl}"); 
-       background-size: 32px 32px; 
-       background-repeat: no-repeat; 
-       background-position: left center;
-       background-color: #f8fafc;
-       border: 2px solid #6366f1;
-       border-radius: 8px;
-       margin: 4px 0;
-       padding-left: 50px;`
-    );
-
-    // Method 2: Create a clickable link to view the favicon
-    console.log(`🖼️ View Favicon: ${window.location.origin}${faviconUrl}`);
-
-    // Method 3: ASCII art representation
-    console.log(`
-    ┌─────────────────┐
-    │   🎌 FAVICON    │
-    │                 │
-    │   ${faviconUrl} │
-    └─────────────────┘
-    `);
-
-    // Method 4: Load and try to display the actual image
-    const img = new Image();
-    img.onload = () => {
-      // Try console.image if available (Firefox) - use type assertion for non-standard method
-      const consoleAny = console as any;
-      if (typeof consoleAny.image === "function") {
-        consoleAny.image(faviconUrl);
-      } else {
-        // Fallback: Create a data URL and log it
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          canvas.width = 32;
-          canvas.height = 32;
-          ctx.fillStyle = "#f8fafc";
-          ctx.fillRect(0, 0, 32, 32);
-          ctx.drawImage(img, 0, 0, 32, 32);
-
-          console.log(
-            "%c ",
-            `font-size: 1px; 
-             line-height: 32px;
-             padding: 16px 16px; 
-             background-image: url("${canvas.toDataURL()}"); 
-             background-size: 32px 32px; 
-             background-repeat: no-repeat;
-             border: 1px solid #6366f1;`
-          );
-        }
-      }
-    };
-    img.onerror = () => {
-      console.log("⚠️ Favicon not found at:", faviconUrl);
-    };
-    img.src = faviconUrl;
-  } catch (error) {
-    console.log("🎌 Stataku Favicon (Display method not supported)");
+  // Only run in browser environment with additional safety checks
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    typeof console === "undefined"
+  ) {
+    return;
   }
 
-  // Additional page info
-  console.log(`📍 Current URL: ${window.location.href}`);
-  console.log(`⏰ Loaded at: ${new Date().toLocaleString()}`);
-  console.log(`🌐 User Agent: ${navigator.userAgent.split(" ")[0]}`);
+  // Add a small delay to ensure DOM is fully loaded and hydration is complete
+  setTimeout(() => {
+    try {
+      const faviconUrl = "/favicon.ico";
+      const defaultMessage = `Welcome to ${pageName}`;
+      const message = customMessage || defaultMessage;
 
-  // Add a separator
-  console.log("━".repeat(50));
+      // Create a styled console log with the favicon
+      const styles = [
+        "color: #6366f1",
+        "font-size: 16px",
+        "font-weight: bold",
+        "text-shadow: 1px 1px 2px rgba(0,0,0,0.3)",
+        "padding: 10px",
+        "border: 2px solid #6366f1",
+        "border-radius: 8px",
+        "background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+        "margin: 10px 0",
+      ].join(";");
+
+      // Log the beautiful header
+      console.log(
+        `%c
+        🎌 ===== ${pageName} Console Log =====
+        
+        ${message}
+        
+        ===================================
+        `,
+        styles
+      );
+
+      // Display favicon using multiple methods for better browser compatibility
+      try {
+        // Method 1: Try to display as background image (works in Chrome/Edge)
+        console.log(
+          "%c🎌 FAVICON",
+          `font-size: 12px; 
+           font-weight: bold;
+           color: #6366f1;
+           padding: 20px 40px; 
+           background-image: url("${faviconUrl}"); 
+           background-size: 32px 32px; 
+           background-repeat: no-repeat; 
+           background-position: left center;
+           background-color: #f8fafc;
+           border: 2px solid #6366f1;
+           border-radius: 8px;
+           margin: 4px 0;
+           padding-left: 50px;`
+        );
+
+        // Method 2: Create a clickable link to view the favicon
+        console.log(`🖼️ View Favicon: ${window.location.origin}${faviconUrl}`);
+
+        // Method 3: ASCII art representation
+        console.log(`
+        ┌─────────────────┐
+        │   🎌 FAVICON    │
+        │                 │
+        │   ${faviconUrl} │
+        └─────────────────┘
+        `);
+
+        // Method 4: Load and try to display the actual image
+        const img = new Image();
+        img.onload = () => {
+          // Try console.image if available (Firefox) - use type assertion for non-standard method
+          const consoleAny = console as any;
+          if (typeof consoleAny.image === "function") {
+            consoleAny.image(faviconUrl);
+          } else {
+            // Fallback: Create a data URL and log it
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              canvas.width = 32;
+              canvas.height = 32;
+              ctx.fillStyle = "#f8fafc";
+              ctx.fillRect(0, 0, 32, 32);
+              ctx.drawImage(img, 0, 0, 32, 32);
+
+              console.log(
+                "%c ",
+                `font-size: 1px; 
+                 line-height: 32px;
+                 padding: 16px 16px; 
+                 background-image: url("${canvas.toDataURL()}"); 
+                 background-size: 32px 32px; 
+                 background-repeat: no-repeat;
+                 border: 1px solid #6366f1;`
+              );
+            }
+          }
+        };
+        img.onerror = () => {
+          console.log("⚠️ Favicon not found at:", faviconUrl);
+        };
+        img.src = faviconUrl;
+      } catch (error) {
+        console.log("🎌 Stataku Favicon (Display method not supported)");
+      }
+
+      // Additional page info (safe client-side only)
+      console.log(`📍 Current URL: ${window.location.href}`);
+      console.log(`⏰ Loaded at: ${new Date().toLocaleString()}`);
+      console.log(`🌐 User Agent: ${navigator.userAgent.split(" ")[0]}`);
+
+      // Add a separator
+      console.log("━".repeat(50));
+    } catch (error) {
+      // Silently fail if there are any issues
+      console.log("🎌 Stataku - Page loaded successfully");
+    }
+  }, 100); // Small delay to ensure hydration is complete
 };
 
 // Page-specific messages
