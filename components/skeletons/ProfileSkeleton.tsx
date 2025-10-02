@@ -60,9 +60,9 @@ export const UserProfileSkeleton: React.FC<{ className?: string }> = ({
 }) => (
   <ProfileSkeleton
     className={className}
+    showActions={true}
     showAvatar={true}
     showStats={true}
-    showActions={true}
   />
 );
 

@@ -17,13 +17,14 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 import { Button } from "@heroui/button";
-import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import {
   UserIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserProfileDropdownProps {
   isMobile?: boolean;
@@ -87,6 +88,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
     if (profile.avatar_url) {
       return profile.avatar_url;
     }
+
     return "/avatars/universal-avatar.jpg";
   };
 
@@ -95,16 +97,16 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
       <div className={`flex items-center justify-between w-full ${className}`}>
         {/* Profile Dropdown - Avatar + Username */}
         <Dropdown
-          placement="bottom-start"
           isOpen={isProfileDropdownOpen}
+          placement="bottom-start"
           onOpenChange={setIsProfileDropdownOpen}
         >
           <DropdownTrigger>
             <div className="flex items-center gap-3 cursor-pointer hover:bg-default-100 rounded-lg p-2 -m-2 transition-colors">
               <Avatar
-                src={getAvatarSrc()}
                 className="w-8 h-8"
                 name={profile.username}
+                src={getAvatarSrc()}
               />
               <span className="text-sm font-medium text-foreground">
                 {profile.username}
@@ -113,8 +115,8 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
           </DropdownTrigger>
           <DropdownMenu
             aria-label="Profile actions"
-            variant="flat"
             className="min-w-[200px]"
+            variant="flat"
           >
             <DropdownItem
               key="profile"
@@ -136,10 +138,10 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
         {/* Direct Logout Button */}
         <Button
           isIconOnly
-          variant="light"
-          size="sm"
-          className="min-w-0 w-8 h-8 text-danger hover:bg-danger-50"
           aria-label="Logout"
+          className="min-w-0 w-8 h-8 text-danger hover:bg-danger-50"
+          size="sm"
+          variant="light"
           onPress={handleDirectLogout}
         >
           <ArrowRightOnRectangleIcon className="w-4 h-4" />
@@ -165,8 +167,8 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                   </Button>
                   <Button
                     color="danger"
-                    onPress={confirmLogout}
                     isLoading={isLoggingOut}
+                    onPress={confirmLogout}
                   >
                     {isLoggingOut ? "Logging out..." : "Log Out"}
                   </Button>
@@ -184,16 +186,16 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
       <Dropdown placement="bottom-end">
         <DropdownTrigger>
           <Avatar
-            src={getAvatarSrc()}
+            aria-label="Open profile menu"
             className="w-8 h-8 cursor-pointer hover:scale-105 transition-transform"
             name={profile.username}
-            aria-label="Open profile menu"
+            src={getAvatarSrc()}
           />
         </DropdownTrigger>
         <DropdownMenu
           aria-label="Profile actions"
-          variant="flat"
           className="min-w-[200px]"
+          variant="flat"
         >
           <DropdownItem
             key="profile"
@@ -240,8 +242,8 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                 </Button>
                 <Button
                   color="danger"
-                  onPress={handleLogout}
                   isLoading={isLoggingOut}
+                  onPress={handleLogout}
                 >
                   {isLoggingOut ? "Logging out..." : "Log Out"}
                 </Button>

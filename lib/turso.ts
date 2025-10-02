@@ -1,20 +1,21 @@
 // Database operations now use API routes for security
+import { supabase } from "@/lib/supabase";
 
 // Database types - updated to match profiles table schema
 export interface UserProfile {
   id: string;
   username: string;
   slug: string;
-  display_name?: string;
-  bio?: string;
-  avatar_url?: string;
-  banner_url?: string;
+  display_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
   created_at: string;
 }
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string
+  username: string,
 ): Promise<boolean> => {
   try {
     const response = await fetch("/api/check-username", {
@@ -27,13 +28,16 @@ export const checkUsernameAvailability = async (
 
     if (!response.ok) {
       console.error("Failed to check username availability");
+
       return false;
     }
 
     const data = await response.json();
+
     return data.available;
   } catch (error) {
     console.error("Error checking username availability:", error);
+
     return false; // Default to not available on error
   }
 };
@@ -66,6 +70,7 @@ export const createUsername = async (userId: string, username: string) => {
     };
   } catch (error) {
     console.error("Error creating username:", error);
+
     return {
       success: false,
       error: "Failed to create username",
@@ -77,6 +82,7 @@ export const createUsername = async (userId: string, username: string) => {
 // Legacy function for backward compatibility
 export const createUserProfile = async (userId: string, username: string) => {
   const result = await createUsername(userId, username);
+
   return {
     data: result.success ? { username: result.username } : null,
     error: result.success ? null : new Error(result.error),
@@ -85,10 +91,24 @@ export const createUserProfile = async (userId: string, username: string) => {
 
 export const getUserProfile = async (userId: string) => {
   try {
+    // Get the current session token for authentication
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      return {
+        data: null,
+        error: new Error("No active session"),
+      };
+    }
+
     const response = await fetch("/api/get-profile", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ userId }),
     });
@@ -102,20 +122,178 @@ export const getUserProfile = async (userId: string) => {
       };
     }
 
+    // Log cache status for debugging
+    if (data.fromCache) {
+      console.log("✅ Profile data served from cache");
+    } else {
+      console.log("🔄 Profile data fetched from database");
+    }
+
     return { data: data.data, error: data.error };
   } catch (error) {
     console.error("Error getting user profile:", error);
+
+    return { data: null, error: error as Error };
+  }
+};
+
+export const getUserProfileNoCache = async (userId: string) => {
+  try {
+    // Get the current session token for authentication
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      return {
+        data: null,
+        error: new Error("No active session"),
+      };
+    }
+
+    const response = await fetch("/api/get-profile-no-cache", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: new Error(data.error || "Failed to get profile"),
+      };
+    }
+
+    console.log("🔄 Profile data fetched from database (no cache)");
+
+    return { data: data.data, error: data.error };
+  } catch (error) {
+    console.error("Error getting user profile (no cache):", error);
+
+    return { data: null, error: error as Error };
+  }
+};
+
+export const getUserProfileBySlug = async (slug: string) => {
+  try {
+    const response = await fetch("/api/get-profile-by-slug", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ slug }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: new Error(data.error || "Failed to get profile"),
+      };
+    }
+
+    // Log cache status for debugging
+    if (data.fromCache) {
+      console.log("✅ Profile data served from cache for slug:", slug);
+    } else {
+      console.log("🔄 Profile data fetched from database for slug:", slug);
+    }
+
+    return { data: data.data, error: data.error };
+  } catch (error) {
+    console.error("Error getting user profile by slug:", error);
+
+    return { data: null, error: error as Error };
+  }
+};
+
+export const getUserProfileBySlugNoCache = async (slug: string) => {
+  try {
+    const response = await fetch("/api/get-profile-by-slug-no-cache", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ slug }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: new Error(data.error || "Failed to get profile"),
+      };
+    }
+
+    console.log(
+      "🔄 Profile data fetched from database (no cache) for slug:",
+      slug,
+    );
+
+    return { data: data.data, error: data.error };
+  } catch (error) {
+    console.error("Error getting user profile by slug (no cache):", error);
+
     return { data: null, error: error as Error };
   }
 };
 
 export const updateUserProfile = async (
-  _userId: string,
-  _updates: Partial<UserProfile>
+  userId: string,
+  updates: Partial<UserProfile>,
 ) => {
-  // TODO: Implement update profile API route if needed
-  console.warn("updateUserProfile not implemented yet");
-  return { data: null, error: new Error("Not implemented") };
+  try {
+    // Get the current session token for authentication
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      return {
+        data: null,
+        error: new Error("No active session"),
+      };
+    }
+
+    const response = await fetch("/api/update-profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        userId,
+        display_name: updates.display_name,
+        bio: updates.bio,
+        avatar_url: updates.avatar_url,
+        banner_url: updates.banner_url,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: new Error(data.error || "Failed to update profile"),
+      };
+    }
+
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+
+    return { data: null, error: error as Error };
+  }
 };
 
 // Initialize database schema
@@ -132,6 +310,7 @@ export const initializeDatabase = async () => {
 
     if (!response.ok) {
       console.error("Failed to initialize database:", data.error);
+
       return;
     }
 

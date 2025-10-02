@@ -1,22 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@libsql/client";
 
-// Initialize Turso client lazily
-function getTursoClient() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+import { createUsername } from "@/lib/database-service";
 
-  if (!url || !authToken) {
-    throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
-    );
-  }
-
-  return createClient({
-    url,
-    authToken,
-  });
-}
+// This file now uses the cached database service
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +17,7 @@ export async function POST(request: NextRequest) {
           error: "User ID and username are required",
           success: false,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,7 +27,7 @@ export async function POST(request: NextRequest) {
           error: "User ID and username must be strings",
           success: false,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,14 +40,28 @@ export async function POST(request: NextRequest) {
           error: "Username must be at least 3 characters long",
           success: false,
         },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    // Validate username characters (only letters, digits, underscores, and periods)
+    const validPattern = /^[a-z0-9_.]+$/;
+
+    if (!validPattern.test(normalizedUsername)) {
+      return NextResponse.json(
+        {
+          error:
+            "Username can only contain letters, digits, underscores, and periods",
+          success: false,
+        },
+        { status: 400 },
       );
     }
 
     // Check if database is configured
     if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
       console.warn(
-        "Database not configured, using mock response for username creation"
+        "Database not configured, using mock response for username creation",
       );
 
       // Mock response for testing
@@ -76,54 +76,37 @@ export async function POST(request: NextRequest) {
     // Create slug from username (same as username for now, but can be customized later)
     const slug = normalizedUsername;
 
-    // Atomic insert with conflict handling
-    // Using ON CONFLICT(username) DO NOTHING to handle race conditions gracefully
-    // as specified in requirements
-    // First try with new schema, fallback to old schema if columns don't exist
-    const turso = getTursoClient();
-    let result;
-    try {
-      result = await turso.execute({
-        sql: `
-          INSERT INTO profiles(id, username, slug) 
-          VALUES(?, ?, ?) 
-          ON CONFLICT(username) DO NOTHING 
-          RETURNING username, slug
-        `,
-        args: [userId, normalizedUsername, slug],
-      });
-    } catch (error) {
-      // Fallback to old schema if slug column doesn't exist
-      console.log("Slug column not found, using old schema");
-      result = await turso.execute({
-        sql: `
-          INSERT INTO profiles(id, username) 
-          VALUES(?, ?) 
-          ON CONFLICT(username) DO NOTHING 
-          RETURNING username
-        `,
-        args: [userId, normalizedUsername],
-      });
-    }
+    // Use the cached database service (this will automatically invalidate cache)
+    const result = await createUsername(userId, normalizedUsername);
 
-    // Check if the insert was successful
-    if (result.rows.length === 0) {
-      // No rows returned means username was already taken (conflict)
+    if (result.error) {
+      if (
+        result.error.includes("already taken") ||
+        result.error.includes("conflict")
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Username is already taken",
+            conflict: true,
+          },
+          { status: 409 },
+        );
+      }
+
       return NextResponse.json(
         {
           success: false,
-          error: "Username is already taken",
-          conflict: true,
+          error: result.error,
         },
-        { status: 409 }
+        { status: 500 },
       );
     }
 
-    // Success - username was created
-    const row = result.rows[0];
     return NextResponse.json({
       success: true,
-      username: row.username as string,
+      username: result.data?.username,
+      slug: result.data?.slug,
       message: "Username created successfully",
     });
   } catch (error: any) {
@@ -141,7 +124,7 @@ export async function POST(request: NextRequest) {
           error: "Username is already taken",
           conflict: true,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -152,7 +135,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "User not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -167,7 +150,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Database connection error. Please try again.",
         },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -179,7 +162,7 @@ export async function POST(request: NextRequest) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

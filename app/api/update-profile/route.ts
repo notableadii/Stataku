@@ -1,34 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@libsql/client";
+import { revalidatePath, revalidateTag } from "next/cache";
 
-// Initialize Turso client lazily
-function getTursoClient() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+import { withSecurity, sanitizeInput } from "@/lib/security";
+import { updateProfile } from "@/lib/database-service";
 
-  if (!url || !authToken) {
-    throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
-    );
-  }
-
-  return createClient({
-    url,
-    authToken,
-  });
-}
-
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest, { user }) => {
   try {
-    // Parse request body
+    // Parse and sanitize request body
     const body = await request.json();
-    const { userId, display_name, bio, avatar_url, banner_url } = body;
+    const sanitizedBody = sanitizeInput(body);
+    const { userId, display_name, bio, avatar_url, banner_url } = sanitizedBody;
 
     // Validate input
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    // Security check: Ensure user can only update their own profile
+    if (userId !== user.id) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only update your own profile" },
+        { status: 403 },
       );
     }
 
@@ -40,14 +35,14 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Display name must be a string or null" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (bio !== undefined && bio !== null && typeof bio !== "string") {
       return NextResponse.json(
         { error: "Bio must be a string or null" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,7 +53,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Avatar URL must be a string or null" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -69,7 +64,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Banner URL must be a string or null" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -77,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (bio && typeof bio === "string" && bio.length > 500) {
       return NextResponse.json(
         { error: "Bio must be 500 characters or less" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,97 +84,53 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Display name must be 50 characters or less" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Build update query
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (display_name !== undefined) {
-      updates.push("display_name = ?");
-      values.push(
-        display_name &&
-          typeof display_name === "string" &&
-          display_name.trim() !== ""
-          ? display_name.trim()
-          : null
-      );
-    }
-
-    if (bio !== undefined) {
-      updates.push("bio = ?");
-      values.push(
-        bio && typeof bio === "string" && bio.trim() !== "" ? bio.trim() : null
-      );
-    }
-
-    if (avatar_url !== undefined) {
-      updates.push("avatar_url = ?");
-      values.push(
-        avatar_url && typeof avatar_url === "string" && avatar_url.trim() !== ""
-          ? avatar_url.trim()
-          : null
-      );
-    }
-
-    if (banner_url !== undefined) {
-      updates.push("banner_url = ?");
-      values.push(
-        banner_url && typeof banner_url === "string" && banner_url.trim() !== ""
-          ? banner_url.trim()
-          : null
-      );
-    }
-
-    if (updates.length === 0) {
-      return NextResponse.json(
-        { error: "No fields to update" },
-        { status: 400 }
-      );
-    }
-
-    // Add user ID to values
-    values.push(userId);
-
-    // Update profile
-    const turso = getTursoClient();
-    await turso.execute({
-      sql: `UPDATE profiles SET ${updates.join(", ")} WHERE id = ?`,
-      args: values,
+    // Use the cached database service (this will automatically invalidate cache)
+    const result = await updateProfile(userId, {
+      display_name,
+      bio,
+      avatar_url,
+      banner_url,
     });
 
-    // Fetch updated profile
-    const result = await turso.execute({
-      sql: "SELECT * FROM profiles WHERE id = ?",
-      args: [userId],
-    });
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
-    const profile = {
-      id: result.rows[0].id as string,
-      username: result.rows[0].username as string,
-      slug: result.rows[0].slug as string,
-      display_name: result.rows[0].display_name as string | null,
-      bio: result.rows[0].bio as string | null,
-      avatar_url: result.rows[0].avatar_url as string | null,
-      banner_url: result.rows[0].banner_url as string | null,
-      created_at: result.rows[0].created_at as string,
-    };
+    // Invalidate Next.js cache for profile-related paths
+    try {
+      // Invalidate the user's profile page
+      if (result.data?.username) {
+        revalidatePath(`/user/${result.data.username}`);
+      }
+
+      // Invalidate settings pages
+      revalidatePath("/settings/profile");
+      revalidatePath("/settings/account");
+
+      // Invalidate by tags
+      revalidateTag("profile");
+      revalidateTag(`profile-${userId}`);
+
+      console.log("✅ Cache invalidated for profile update");
+    } catch (cacheError) {
+      console.error("❌ Error invalidating cache:", cacheError);
+      // Don't fail the request if cache invalidation fails
+    }
 
     return NextResponse.json({
       success: true,
-      data: profile,
+      data: result.data,
     });
   } catch (error) {
     console.error("Error updating profile:", error);
+
     return NextResponse.json(
       { error: "Failed to update profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-}
+});

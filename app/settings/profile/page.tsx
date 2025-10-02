@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -9,12 +8,15 @@ import { Divider } from "@heroui/divider";
 import { Tooltip } from "@heroui/tooltip";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { ProfilePageSkeleton } from "@/components/skeletons";
 import { CameraIcon } from "@heroicons/react/24/outline";
-import { UserProfile } from "@/lib/turso";
 
-export default function ProfilePage() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+import { ProfilePageSkeleton } from "@/components/skeletons";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserProfile, updateUserProfile } from "@/lib/turso";
+import SettingsNav from "@/components/SettingsNav";
+
+export default function ProfileSettingsPage() {
+  const { user, profile, loading, forceRefreshProfile } = useAuth();
   const router = useRouter();
 
   const [displayName, setDisplayName] = useState("");
@@ -41,30 +43,38 @@ export default function ProfilePage() {
         throw new Error("No user found");
       }
 
-      const response = await fetch("/api/update-profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          display_name: displayName.trim() || null,
-          bio: bio.trim() || null,
-          avatar_url: avatarUrl.trim() || null,
-          banner_url: bannerUrl.trim() || null,
-        }),
+      const { data, error } = await updateUserProfile(user.id, {
+        display_name: displayName.trim() || undefined,
+        bio: bio.trim() || undefined,
+        avatar_url: avatarUrl.trim() || undefined,
+        banner_url: bannerUrl.trim() || undefined,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update profile");
+      if (error) {
+        throw new Error(error.message || "Failed to update profile");
       }
 
       setMessage({ type: "success", text: "Profile updated successfully!" });
 
       // Refresh profile in auth context
-      await refreshProfile();
+      await forceRefreshProfile();
+
+      // Force refresh Next.js router cache
+      router.refresh();
+
+      // Force refresh the browser cache for profile-related pages
+      if ("caches" in window) {
+        try {
+          const cacheNames = await caches.keys();
+
+          await Promise.all(
+            cacheNames.map((cacheName) => caches.delete(cacheName)),
+          );
+          console.log("✅ Browser caches cleared");
+        } catch (error) {
+          console.error("❌ Error clearing browser caches:", error);
+        }
+      }
 
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -148,6 +158,7 @@ export default function ProfilePage() {
     if (avatarUrl && avatarUrl.trim() !== "") {
       return avatarUrl;
     }
+
     return "/avatars/universal-avatar.jpg";
   };
 
@@ -156,6 +167,7 @@ export default function ProfilePage() {
     if (bannerUrl && bannerUrl.trim() !== "") {
       return bannerUrl;
     }
+
     return "/banners/banner.jpg";
   };
 
@@ -164,6 +176,7 @@ export default function ProfilePage() {
     if (displayName && displayName.trim() !== "") {
       return displayName;
     }
+
     return profile?.username || "Unknown User";
   };
 
@@ -176,6 +189,14 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       const fullProfile = profile as UserProfile;
+
+      console.log("🔄 Profile data changed, updating form fields:", {
+        display_name: fullProfile.display_name,
+        bio: fullProfile.bio,
+        avatar_url: fullProfile.avatar_url,
+        banner_url: fullProfile.banner_url,
+      });
+
       setDisplayName(fullProfile.display_name || "");
       setBio(fullProfile.bio || "");
       setAvatarUrl(fullProfile.avatar_url || "");
@@ -195,12 +216,15 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <SettingsNav />
+
       {/* Header */}
       <div className="py-4 px-4 sm:py-6 sm:px-6 lg:py-8 lg:px-8 -mt-4 sm:-mt-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-2 sm:mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">
-              Edit Profile
+              Profile Settings
             </h1>
             <p className="text-default-500 text-base sm:text-lg">
               Customize your profile information
@@ -215,15 +239,15 @@ export default function ProfilePage() {
           <div className="relative w-full sm:max-w-2xl mb-4">
             <div className="relative w-full h-32 sm:h-40 md:h-48 overflow-hidden rounded-lg border border-divider">
               <img
-                src={getBannerSrc()}
                 alt="Profile banner preview"
                 className="w-full h-full object-cover"
+                src={getBannerSrc()}
               />
               <button
-                type="button"
-                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={handleBannerClick}
                 aria-label="Change banner"
+                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                type="button"
+                onClick={handleBannerClick}
               >
                 <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </button>
@@ -246,17 +270,17 @@ export default function ProfilePage() {
           <div className="mb-2 sm:mb-10">
             <div className="flex flex-col items-center">
               <button
-                type="button"
-                className="relative group mb-1 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
-                onClick={handleAvatarClick}
                 aria-label="Change avatar"
+                className="relative group mb-1 sm:mb-6 cursor-pointer bg-transparent border-none p-0"
+                type="button"
+                onClick={handleAvatarClick}
               >
                 <Avatar
-                  src={getAvatarSrc()}
-                  className="w-24 h-24 sm:w-32 sm:h-32 text-large transition-transform group-hover:scale-105"
-                  name={getDisplayName()}
                   isBordered
+                  className="w-24 h-24 sm:w-32 sm:h-32 text-large transition-transform group-hover:scale-105"
                   color="primary"
+                  name={getDisplayName()}
+                  src={getAvatarSrc()}
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                   <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
@@ -282,8 +306,8 @@ export default function ProfilePage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label
-                  htmlFor="display-name"
                   className="text-sm font-semibold text-foreground"
+                  htmlFor="display-name"
                 >
                   Display Name
                 </label>
@@ -292,15 +316,15 @@ export default function ProfilePage() {
                 </span>
               </div>
               <Input
-                id="display-name"
-                placeholder="Enter your display name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={50}
                 classNames={{
                   input: "text-sm sm:text-base",
                   inputWrapper: "h-11 sm:h-12",
                 }}
+                id="display-name"
+                maxLength={50}
+                placeholder="Enter your display name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
               />
               <p className="text-xs text-default-400 mt-1.5">
                 This is how others will see your name
@@ -311,8 +335,8 @@ export default function ProfilePage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label
-                  htmlFor="bio"
                   className="text-sm font-semibold text-foreground"
+                  htmlFor="bio"
                 >
                   Bio
                 </label>
@@ -321,16 +345,16 @@ export default function ProfilePage() {
                 </span>
               </div>
               <Textarea
-                id="bio"
-                placeholder="Tell us about yourself..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                maxLength={500}
-                minRows={4}
-                maxRows={8}
                 classNames={{
                   input: "text-sm sm:text-base",
                 }}
+                id="bio"
+                maxLength={500}
+                maxRows={8}
+                minRows={4}
+                placeholder="Tell us about yourself..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
               />
               <p className="text-xs text-default-400 mt-1.5">
                 A brief description about you
@@ -340,29 +364,29 @@ export default function ProfilePage() {
             {/* Avatar URL */}
             <div>
               <label
-                htmlFor="avatar-url"
                 className="text-sm font-semibold text-foreground block mb-1.5"
+                htmlFor="avatar-url"
               >
                 Avatar URL
               </label>
               <Tooltip
+                showArrow
+                color="primary"
                 content="Change your avatar from here"
                 isOpen={showAvatarTooltip}
                 placement="top"
-                color="primary"
-                showArrow
               >
                 <Input
-                  id="avatar-url"
                   ref={avatarUrlInputRef}
-                  placeholder="https://example.com/avatar.jpg"
-                  value={avatarUrl}
-                  onChange={handleAvatarUrlChange}
-                  type="url"
                   classNames={{
                     input: "text-sm sm:text-base",
                     inputWrapper: "h-11 sm:h-12",
                   }}
+                  id="avatar-url"
+                  placeholder="https://example.com/avatar.jpg"
+                  type="url"
+                  value={avatarUrl}
+                  onChange={handleAvatarUrlChange}
                 />
               </Tooltip>
               <p className="text-xs text-default-400 mt-1.5">
@@ -373,29 +397,29 @@ export default function ProfilePage() {
             {/* Banner URL */}
             <div>
               <label
-                htmlFor="banner-url"
                 className="text-sm font-semibold text-foreground block mb-1.5"
+                htmlFor="banner-url"
               >
                 Banner URL
               </label>
               <Tooltip
+                showArrow
+                color="primary"
                 content="Change your banner from here"
                 isOpen={showBannerTooltip}
                 placement="top"
-                color="primary"
-                showArrow
               >
                 <Input
-                  id="banner-url"
                   ref={bannerUrlInputRef}
-                  placeholder="https://example.com/banner.jpg"
-                  value={bannerUrl}
-                  onChange={handleBannerUrlChange}
-                  type="url"
                   classNames={{
                     input: "text-sm sm:text-base",
                     inputWrapper: "h-11 sm:h-12",
                   }}
+                  id="banner-url"
+                  placeholder="https://example.com/banner.jpg"
+                  type="url"
+                  value={bannerUrl}
+                  onChange={handleBannerUrlChange}
                 />
               </Tooltip>
               <p className="text-xs text-default-400 mt-1.5">
@@ -422,20 +446,20 @@ export default function ProfilePage() {
           {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 sm:justify-end">
             <Button
+              className="w-full sm:w-auto"
+              size="lg"
               variant="flat"
               onPress={() => router.push(`/user/${profile.username}`)}
-              size="lg"
-              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
-              color="primary"
-              onPress={handleSave}
-              isLoading={saving}
-              isDisabled={!hasChanges || saving}
-              size="lg"
               className="font-semibold w-full sm:w-auto"
+              color="primary"
+              isDisabled={!hasChanges || saving}
+              isLoading={saving}
+              size="lg"
+              onPress={handleSave}
             >
               {saving ? "Saving..." : "Save Changes"}
             </Button>
@@ -446,8 +470,8 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-default-400">
               <p className="text-xs sm:text-sm">Profile URL</p>
               <a
-                href={`/user/${profile.username}`}
                 className="text-primary hover:underline text-xs sm:text-sm truncate"
+                href={`/user/${profile.username}`}
               >
                 /{profile.username}
               </a>

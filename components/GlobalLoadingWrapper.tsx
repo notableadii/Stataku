@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useGlobalLoading } from "@/contexts/GlobalLoadingContext";
+
 import { GlobalLoadingSpinner } from "./GlobalLoadingSpinner";
+
+import { useGlobalLoading } from "@/contexts/GlobalLoadingContext";
 
 interface GlobalLoadingWrapperProps {
   children: React.ReactNode;
@@ -14,11 +16,8 @@ export function GlobalLoadingWrapper({ children }: GlobalLoadingWrapperProps) {
 
   useEffect(() => {
     if (!isInitialLoading) {
-      // Add a small delay before showing content for smooth transition
-      const timer = setTimeout(() => {
-        setShowContent(true);
-      }, 100);
-      return () => clearTimeout(timer);
+      // Show content immediately when loading is done
+      setShowContent(true);
     } else {
       setShowContent(false);
     }
@@ -27,11 +26,7 @@ export function GlobalLoadingWrapper({ children }: GlobalLoadingWrapperProps) {
   return (
     <>
       <GlobalLoadingSpinner isVisible={isInitialLoading} />
-      <div
-        className={`transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}`}
-      >
-        {children}
-      </div>
+      {!isInitialLoading && <div className="opacity-100">{children}</div>}
     </>
   );
 }

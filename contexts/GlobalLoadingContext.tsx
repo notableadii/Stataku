@@ -27,19 +27,19 @@ export function GlobalLoadingProvider({
     setIsInitialLoading(true);
     setIsAppReady(false);
 
-    // Simulate various loading tasks
+    // Simulate various loading tasks with shorter, more reasonable timing
     const loadTasks = async () => {
       // Simulate database initialization
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Simulate authentication check
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Simulate theme loading
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Simulate component hydration
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       setIsInitialLoading(false);
       setIsAppReady(true);
@@ -72,10 +72,12 @@ export function GlobalLoadingProvider({
 
 export function useGlobalLoading() {
   const context = useContext(GlobalLoadingContext);
+
   if (context === undefined) {
     throw new Error(
       "useGlobalLoading must be used within a GlobalLoadingProvider",
     );
   }
+
   return context;
 }

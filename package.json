@@ -1,6 +1,6 @@
 {
-  "name": "next-app-template",
-  "version": "0.0.1",
+  "name": "Statku",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -55,7 +55,7 @@
     "@react-aria/visually-hidden": "3.8.27",
     "@supabase/supabase-js": "^2.58.0",
     "clsx": "2.1.1",
-    "framer-motion": "11.18.2",
+    "framer-motion": "^11.18.2",
     "intl-messageformat": "10.7.16",
     "next": "15.3.1",
     "next-themes": "0.4.6",

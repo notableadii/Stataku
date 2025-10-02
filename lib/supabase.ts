@@ -26,7 +26,7 @@ function getSupabaseClient() {
       - NEXT_PUBLIC_SUPABASE_ANON_KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "SET" : "NOT SET"}
       - SUPABASE_ANON_KEY (old): ${process.env.SUPABASE_ANON_KEY ? "SET" : "NOT SET"}
       
-      Make sure to use NEXT_PUBLIC_ prefix for client-side environment variables in Next.js.`
+      Make sure to use NEXT_PUBLIC_ prefix for client-side environment variables in Next.js.`,
     );
   }
 
@@ -37,6 +37,7 @@ function getSupabaseClient() {
 export const supabase = new Proxy({} as any, {
   get(target, prop) {
     const client = getSupabaseClient();
+
     return client[prop as keyof typeof client];
   },
 });
@@ -60,6 +61,7 @@ export const signUp = async (email: string, password: string) => {
     email,
     password,
   });
+
   return { data, error };
 };
 
@@ -69,12 +71,14 @@ export const signIn = async (email: string, password: string) => {
     email,
     password,
   });
+
   return { data, error };
 };
 
 export const signOut = async () => {
   const client = getSupabaseClient();
   const { error } = await client.auth.signOut();
+
   return { error };
 };
 
@@ -86,6 +90,7 @@ export const signInWithGoogle = async () => {
       redirectTo: `${window.location.origin}/create-username`,
     },
   });
+
   return { data, error };
 };
 
@@ -97,12 +102,13 @@ export const signInWithDiscord = async () => {
       redirectTo: `${window.location.origin}/create-username`,
     },
   });
+
   return { data, error };
 };
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string
+  username: string,
 ): Promise<boolean> => {
   const client = getSupabaseClient();
   const { error } = await client
@@ -118,6 +124,7 @@ export const checkUsernameAvailability = async (
 
   if (error) {
     console.error("Error checking username:", error);
+
     return false;
   }
 
@@ -141,6 +148,17 @@ export const createUserProfile = async (userId: string, username: string) => {
 export const getUserProfile = async (userId: string) => {
   // Use the API route instead of direct Supabase query since we're using Turso for profiles
   try {
+    // Validate userId before making the request
+    if (!userId || typeof userId !== "string") {
+      console.error("Invalid userId provided to getUserProfile:", userId);
+
+      return {
+        data: null,
+        error: { message: "Invalid user ID" },
+      };
+    }
+
+    console.log("Making API request to /api/get-profile with userId:", userId);
     const response = await fetch("/api/get-profile", {
       method: "POST",
       headers: {
@@ -152,21 +170,32 @@ export const getUserProfile = async (userId: string) => {
     const result = await response.json();
 
     if (!response.ok) {
+      console.error("API request failed:", result);
+
       return {
         data: null,
         error: { message: result.error || "Failed to fetch profile" },
       };
     }
 
+    // Log cache status for debugging
+    if (result.fromCache) {
+      console.log("✅ Profile data served from cache");
+    } else {
+      console.log("🔄 Profile data fetched from database");
+    }
+
     return { data: result.data, error: null };
-  } catch {
+  } catch (error) {
+    console.error("Network error in getUserProfile:", error);
+
     return { data: null, error: { message: "Network error" } };
   }
 };
 
 export const updateUserProfile = async (
   userId: string,
-  updates: Partial<UserProfile>
+  updates: Partial<UserProfile>,
 ) => {
   // Use the API route instead of direct Supabase query since we're using Turso for profiles
   try {

@@ -26,6 +26,7 @@ export function GlobalLoadingSpinner({ isVisible }: GlobalLoadingSpinnerProps) {
       const timer = setTimeout(() => {
         setShouldRender(false);
       }, 300);
+
       return () => clearTimeout(timer);
     }
   }, [isVisible]);
@@ -61,8 +62,8 @@ export function GlobalLoadingSpinner({ isVisible }: GlobalLoadingSpinnerProps) {
         {/* Theme-aware spinner with proper HeroUI props */}
         <div className="relative">
           <Spinner
-            size="lg"
             color="default"
+            size="lg"
             style={{
               color: isDark ? "white" : "black",
             }}

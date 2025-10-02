@@ -55,16 +55,16 @@ export const CardSkeleton: React.FC<CardSkeletonProps> = ({
 
 export const AnimeCardSkeleton: React.FC<{ className?: string }> = ({
   className,
-}) => <CardSkeleton className={className} showChips={true} showButton={true} />;
+}) => <CardSkeleton className={className} showButton={true} showChips={true} />;
 
 export const RecommendationCardSkeleton: React.FC<{ className?: string }> = ({
   className,
 }) => (
   <CardSkeleton
     className={className}
+    showButton={true}
     showChips={false}
     showProgress={true}
-    showButton={true}
   />
 );
 

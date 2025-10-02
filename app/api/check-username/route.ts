@@ -1,97 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@libsql/client";
 
-// Initialize Turso client lazily
-function getTursoClient() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+import {
+  withPublicSecurity,
+  sanitizeInput,
+  isValidUsername,
+} from "@/lib/security";
+import { checkUsername } from "@/lib/database-service";
 
-  if (!url || !authToken) {
-    throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
-    );
-  }
-
-  return createClient({
-    url,
-    authToken,
-  });
-}
-
-// Rate limiting storage (in production, use Redis or similar)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 30; // 30 requests per minute per IP
-
-// Clean up expired rate limit entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  const entries = Array.from(rateLimitMap.entries());
-  for (const [ip, data] of entries) {
-    if (now > data.resetTime) {
-      rateLimitMap.delete(ip);
-    }
-  }
-}, 300000); // 5 minutes
-
-/**
- * Check if the request is within rate limits
- */
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const userLimit = rateLimitMap.get(ip);
-
-  if (!userLimit || now > userLimit.resetTime) {
-    // Reset or create new limit
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (userLimit.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
-  }
-
-  userLimit.count++;
-  return true;
-}
-
-/**
- * Get client IP address from request headers
- */
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const realIP = request.headers.get("x-real-ip");
-
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-
-  if (realIP) {
-    return realIP;
-  }
-
-  return "unknown";
-}
-
-export async function POST(request: NextRequest) {
+export const POST = withPublicSecurity(async (request: NextRequest) => {
   try {
-    // Get client IP for rate limiting
-    const clientIP = getClientIP(request);
-
-    // Check rate limit
-    if (!checkRateLimit(clientIP)) {
-      return NextResponse.json(
-        {
-          error: "Rate limit exceeded. Please try again later.",
-          available: false,
-        },
-        { status: 429 }
-      );
-    }
-
-    // Parse request body
+    // Parse and sanitize request body
     const body = await request.json();
-    const { username } = body;
+    const sanitizedBody = sanitizeInput(body);
+    const { username } = sanitizedBody;
 
     // Validate input
     if (!username || typeof username !== "string") {
@@ -100,18 +21,19 @@ export async function POST(request: NextRequest) {
           error: "Username is required and must be a string",
           available: false,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const normalizedUsername = username.toLowerCase().trim();
 
-    // Enforce minimum username length (3+ chars as specified)
-    if (normalizedUsername.length < 3) {
+    // Validate username format using security utility
+    if (!isValidUsername(normalizedUsername)) {
       return NextResponse.json({
         available: false,
         username: normalizedUsername,
-        error: "Username must be at least 3 characters long",
+        error:
+          "Invalid username format. Username must be 3-30 characters and contain only letters, numbers, dots, hyphens, and underscores.",
       });
     }
 
@@ -176,7 +98,7 @@ export async function POST(request: NextRequest) {
     // Check if database is configured
     if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
       console.warn(
-        "Database not configured, using mock data for username checking"
+        "Database not configured, using mock data for username checking",
       );
 
       // Mock some usernames as taken for testing
@@ -192,19 +114,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check username availability using optimized query
-    // Using LIMIT 1 to minimize read cost as specified
-    const turso = getTursoClient();
-    const result = await turso.execute({
-      sql: "SELECT 1 FROM profiles WHERE username = ? LIMIT 1",
-      args: [normalizedUsername],
-    });
+    // Use the cached database service
+    const result = await checkUsername(normalizedUsername);
 
-    const isAvailable = result.rows.length === 0;
+    if (result.error) {
+      return NextResponse.json({
+        available: false,
+        username: normalizedUsername,
+        error: result.error,
+      });
+    }
 
     return NextResponse.json({
-      available: isAvailable,
+      available: result.data,
       username: normalizedUsername,
+      fromCache: result.fromCache,
     });
   } catch (error) {
     console.error("Error checking username availability:", error);
@@ -273,8 +197,8 @@ export async function POST(request: NextRequest) {
           error: "Internal server error",
           available: false,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }
-}
+});

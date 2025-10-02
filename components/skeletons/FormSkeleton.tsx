@@ -69,8 +69,8 @@ export const SignInFormSkeleton: React.FC<{ className?: string }> = ({
   <FormSkeleton
     className={className}
     fieldCount={2}
-    showSocialButtons={true}
     showFooter={true}
+    showSocialButtons={true}
   />
 );
 
@@ -80,8 +80,8 @@ export const SignUpFormSkeleton: React.FC<{ className?: string }> = ({
   <FormSkeleton
     className={className}
     fieldCount={3}
-    showSocialButtons={true}
     showFooter={true}
+    showSocialButtons={true}
   />
 );
 
@@ -91,7 +91,7 @@ export const UsernameFormSkeleton: React.FC<{ className?: string }> = ({
   <FormSkeleton
     className={className}
     fieldCount={1}
-    showSocialButtons={false}
     showFooter={false}
+    showSocialButtons={false}
   />
 );

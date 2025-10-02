@@ -43,18 +43,18 @@ export default function Error({
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
+                  className="w-full sm:w-auto"
                   color="primary"
                   onPress={() => router.back()}
-                  className="w-full sm:w-auto"
                 >
                   Go Back
                 </Button>
                 <Button
                   as={Link}
-                  href="/"
-                  color="default"
-                  variant="bordered"
                   className="w-full sm:w-auto"
+                  color="default"
+                  href="/"
+                  variant="bordered"
                 >
                   Go Home
                 </Button>
@@ -82,18 +82,18 @@ export default function Error({
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
+                className="w-full sm:w-auto"
                 color="primary"
                 onPress={() => reset()}
-                className="w-full sm:w-auto"
               >
                 Try Again
               </Button>
               <Button
                 as={Link}
-                href="/"
-                color="default"
-                variant="bordered"
                 className="w-full sm:w-auto"
+                color="default"
+                href="/"
+                variant="bordered"
               >
                 Go Home
               </Button>

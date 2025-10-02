@@ -1,10 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+
+// Motion import removed - using simple hover effects only
+import { useEffect } from "react";
+
 import { UsernameSelector } from "@/components/UsernameSelector";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
 import { UsernameFormSkeleton } from "@/components/skeletons";
+// Animation imports removed - using simple hover effects only
 
 export default function CreateUsernamePage() {
   const router = useRouter();
@@ -64,10 +68,12 @@ export default function CreateUsernamePage() {
   };
 
   return (
-    <UsernameSelector
-      userId={user.id}
-      onUsernameCreated={handleUsernameCreated}
-      onCancel={handleCancel}
-    />
+    <div>
+      <UsernameSelector
+        userId={user.id}
+        onCancel={handleCancel}
+        onUsernameCreated={handleUsernameCreated}
+      />
+    </div>
   );
 }

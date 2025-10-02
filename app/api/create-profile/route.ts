@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client";
 
+import { withSecurity, sanitizeInput, isValidUsername } from "@/lib/security";
+
 // Initialize Turso client lazily
 function getTursoClient() {
   const url = process.env.TURSO_DATABASE_URL;
@@ -8,7 +10,7 @@ function getTursoClient() {
 
   if (!url || !authToken) {
     throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.",
     );
   }
 
@@ -18,14 +20,35 @@ function getTursoClient() {
   });
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest, { user }) => {
   try {
-    const { userId, username } = await request.json();
+    const body = await request.json();
+    const sanitizedBody = sanitizeInput(body);
+    const { userId, username } = sanitizedBody;
 
     if (!userId || !username) {
       return NextResponse.json(
         { error: "User ID and username are required" },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    // Security check: Ensure user can only create their own profile
+    if (userId !== user.id) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only create your own profile" },
+        { status: 403 },
+      );
+    }
+
+    // Validate username format
+    if (!isValidUsername(username)) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid username format. Username must be 3-30 characters and contain only letters, numbers, dots, hyphens, and underscores.",
+        },
+        { status: 400 },
       );
     }
 
@@ -47,13 +70,13 @@ export async function POST(request: NextRequest) {
     if (error.message?.includes("UNIQUE constraint failed")) {
       return NextResponse.json(
         { error: "Username is already taken" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-}
+});

@@ -3,14 +3,16 @@ import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 
 import { Providers } from "./providers";
+
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GlobalLoadingProvider } from "@/contexts/GlobalLoadingContext";
 import { GlobalLoadingWrapper } from "@/components/GlobalLoadingWrapper";
 import { DatabaseInitializer } from "@/components/DatabaseInitializer";
-
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
+import { PageTransition } from "@/components/PageTransition";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: {
@@ -41,7 +43,7 @@ export default function RootLayout({
       <body
         className={clsx(
           "min-h-screen text-foreground bg-background font-sans antialiased",
-          fontSans.variable
+          fontSans.variable,
         )}
       >
         <Providers
@@ -56,12 +58,14 @@ export default function RootLayout({
             <AuthProvider>
               <DatabaseInitializer />
               <GlobalLoadingWrapper>
-                <div className="relative flex flex-col h-screen">
-                  <Navbar />
-                  <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
-                    {children}
-                  </main>
-                </div>
+                <ErrorBoundary>
+                  <div className="relative flex flex-col h-screen">
+                    <Navbar />
+                    <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+                      <PageTransition>{children}</PageTransition>
+                    </main>
+                  </div>
+                </ErrorBoundary>
               </GlobalLoadingWrapper>
             </AuthProvider>
           </GlobalLoadingProvider>

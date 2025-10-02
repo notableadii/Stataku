@@ -1,12 +1,17 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
-import { UserProfile } from "@/lib/turso";
-import { useAuth } from "@/contexts/AuthContext";
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
+
+import {
+  UserProfile,
+  getUserProfileBySlug,
+  getUserProfileBySlugNoCache,
+} from "@/lib/turso";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -16,43 +21,36 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [usernameNotFound, setUsernameNotFound] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  const fetchProfile = useCallback(
+    async (forceRefresh = false) => {
       if (!username) return;
 
       try {
+        setLoading(true);
         setError(null);
 
-        // Create an AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        console.log(
+          `Fetching profile ${forceRefresh ? "(no cache)" : "(with cache)"} for username: ${username}`,
+        );
+        const { data, error: fetchError } = forceRefresh
+          ? await getUserProfileBySlugNoCache(username)
+          : await getUserProfileBySlug(username);
 
-        const response = await fetch("/api/get-profile-by-slug", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ slug: username }),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            // Profile not found, show custom message
+        if (fetchError) {
+          if (fetchError.message.includes("Profile not found")) {
             setUsernameNotFound(true);
+
             return;
           }
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(fetchError.message);
         }
 
-        const data = await response.json();
-
         // Ensure we have valid profile data before setting it
-        if (data.data && data.data.username) {
-          setProfile(data.data);
+        if (data && data.username) {
+          console.log("Profile loaded successfully:", data);
+          setProfile(data);
         } else {
           // If profile data is invalid, show custom message
           setUsernameNotFound(true);
@@ -62,6 +60,7 @@ export default function ProfilePage() {
 
         // Check if this is a 404 error or network error
         const errorMessage = err instanceof Error ? err.message : String(err);
+
         if (
           errorMessage.includes("404") ||
           errorMessage.includes("Not Found") ||
@@ -71,17 +70,54 @@ export default function ProfilePage() {
           (err instanceof Error && err.name === "AbortError")
         ) {
           setUsernameNotFound(true);
+
           return;
         }
 
         setError(
-          err instanceof Error ? err.message : "Failed to fetch profile"
+          err instanceof Error ? err.message : "Failed to fetch profile",
         );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [username],
+  );
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Check if the logged-in user is viewing their own profile
+  const isOwnProfile =
+    user &&
+    currentUserProfile &&
+    profile &&
+    (currentUserProfile.id === profile.id ||
+      currentUserProfile.username === profile.username);
+
+  // Listen for profile updates from AuthContext
+  useEffect(() => {
+    if (isOwnProfile && currentUserProfile) {
+      console.log("Profile updated in AuthContext, updating display");
+      setProfile(currentUserProfile);
+    }
+  }, [isOwnProfile, currentUserProfile]);
+
+  // Force refresh profile data when user navigates back to their profile after editing
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isOwnProfile) {
+        console.log("Page became visible, refreshing profile data");
+        fetchProfile(true); // Force refresh without cache
       }
     };
 
-    fetchProfile();
-  }, [username]);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isOwnProfile, fetchProfile]);
 
   if (usernameNotFound) {
     return (
@@ -110,8 +146,20 @@ export default function ProfilePage() {
     );
   }
 
-  // If profile is still loading or null, don't render anything
-  // The global loading screen will handle the loading state
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="text-primary text-6xl mb-4">⏳</div>
+          <h1 className="text-2xl font-bold mb-2">Loading Profile</h1>
+          <p className="text-default-500">Fetching profile data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If profile is still null after loading, don't render anything
   if (!profile || !profile.username) {
     return null;
   }
@@ -121,6 +169,7 @@ export default function ProfilePage() {
     if (profile?.banner_url && profile.banner_url.trim() !== "") {
       return profile.banner_url;
     }
+
     return "/banners/banner.jpg";
   };
 
@@ -129,6 +178,7 @@ export default function ProfilePage() {
     if (profile?.avatar_url && profile.avatar_url.trim() !== "") {
       return profile.avatar_url;
     }
+
     return "/avatars/universal-avatar.jpg";
   };
 
@@ -137,15 +187,21 @@ export default function ProfilePage() {
     if (profile?.display_name && profile.display_name.trim() !== "") {
       return profile.display_name;
     }
+
     return profile?.username || "Unknown User";
   };
 
-  // Check if the logged-in user is viewing their own profile
-  const isOwnProfile =
-    user &&
-    currentUserProfile &&
-    (currentUserProfile.id === profile.id ||
-      currentUserProfile.username === profile.username);
+  // Calculate days since user joined
+  const getDaysSinceJoined = () => {
+    if (!profile?.created_at) return null;
+
+    const joinDate = new Date(profile.created_at);
+    const currentDate = new Date();
+    const timeDiff = currentDate.getTime() - joinDate.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+    return daysDiff;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -153,12 +209,12 @@ export default function ProfilePage() {
         {/* Banner Section */}
         <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded-lg sm:rounded-none">
           <img
-            src={getBannerSrc()}
             alt="Profile banner"
             className="w-full h-full object-cover"
+            src={getBannerSrc()}
           />
           {/* Overlay for better text readability if needed */}
-          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute inset-0 bg-black/10" />
         </div>
 
         {/* Profile Content Container */}
@@ -167,10 +223,10 @@ export default function ProfilePage() {
           <div className="flex justify-center mb-4">
             <div className="relative">
               <Avatar
-                src={getAvatarSrc()}
+                isBordered
                 className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 text-large border-4 border-background shadow-lg"
                 name={getDisplayName()}
-                isBordered
+                src={getAvatarSrc()}
               />
             </div>
           </div>
@@ -192,14 +248,14 @@ export default function ProfilePage() {
               {/* Edit Button */}
               {isOwnProfile && (
                 <Button
+                  className="w-full sm:w-auto"
                   color="primary"
-                  variant="flat"
+                  size="sm"
                   startContent={
                     <PencilSquareIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   }
-                  onPress={() => router.push("/profile")}
-                  className="w-full sm:w-auto"
-                  size="sm"
+                  variant="flat"
+                  onPress={() => router.push("/settings/profile")}
                 >
                   <span className="sm:inline">Edit Profile</span>
                 </Button>
@@ -207,7 +263,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Divider line */}
-            <div className="w-full h-px bg-divider mb-4"></div>
+            <div className="w-full h-px bg-divider mb-4" />
 
             {/* Bio and Member Since */}
             <div className="text-center sm:text-left">
@@ -218,12 +274,25 @@ export default function ProfilePage() {
                 </p>
               )}
 
-              {/* Member since */}
+              {/* Member joined */}
               <p className="text-xs sm:text-sm text-default-400">
-                Member since{" "}
-                {profile?.created_at
-                  ? new Date(profile.created_at).toLocaleDateString()
-                  : "Unknown"}
+                {(() => {
+                  const daysSinceJoined = getDaysSinceJoined();
+
+                  if (daysSinceJoined === null) {
+                    return "Joined Unknown";
+                  }
+
+                  if (daysSinceJoined === 0) {
+                    return "Joined today";
+                  }
+
+                  if (daysSinceJoined === 1) {
+                    return "Joined 1 day ago";
+                  }
+
+                  return `Joined ${daysSinceJoined} days ago`;
+                })()}
               </p>
             </div>
           </div>

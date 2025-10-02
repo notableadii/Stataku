@@ -75,8 +75,8 @@ export const BrowsePageSkeleton: React.FC<{ className?: string }> = ({
   <div className={`container mx-auto max-w-7xl px-6 py-8 ${className}`}>
     <ListSkeleton
       itemCount={6}
-      showHeader={true}
       showChips={true}
+      showHeader={true}
       showPagination={true}
     />
   </div>

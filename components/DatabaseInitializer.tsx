@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import { initializeDatabase } from "@/lib/turso";
 
 export function DatabaseInitializer() {

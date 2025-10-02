@@ -19,6 +19,7 @@ export class BloomFilter {
    */
   add(item: string): void {
     const hashes = this.getHashes(item);
+
     hashes.forEach((hash) => {
       this.bitArray[hash] = true;
     });
@@ -30,6 +31,7 @@ export class BloomFilter {
    */
   mightContain(item: string): boolean {
     const hashes = this.getHashes(item);
+
     return hashes.every((hash) => this.bitArray[hash]);
   }
 
@@ -56,6 +58,7 @@ export class BloomFilter {
 
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
+
       hash = (hash * seedMultiplier + char) % this.size;
     }
 
@@ -67,6 +70,7 @@ export class BloomFilter {
    */
   getFillRatio(): number {
     const filledBits = this.bitArray.filter((bit) => bit).length;
+
     return filledBits / this.size;
   }
 
@@ -100,8 +104,10 @@ export class UsernameCache {
 
     // Check if we have a valid cached result
     const cached = this.cache.get(key);
+
     if (cached) {
       const now = Date.now();
+
       if (now - cached.timestamp < cached.ttl) {
         // Cache is still valid
         return false;
@@ -153,6 +159,7 @@ export class UsernameCache {
 
     if (cached) {
       const now = Date.now();
+
       if (now - cached.timestamp < cached.ttl) {
         // Cache is still valid
         return cached.value;
@@ -185,9 +192,11 @@ export class UsernameCache {
     // If still too large, remove oldest entries
     if (this.cache.size > this.maxCacheSize) {
       const entries = Array.from(this.cache.entries());
+
       entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
 
       const toRemove = entries.slice(0, this.cache.size - this.maxCacheSize);
+
       toRemove.forEach(([key]) => this.cache.delete(key));
 
       console.log(
@@ -201,6 +210,7 @@ export class UsernameCache {
    */
   invalidateUsername(username: string): void {
     const key = username.toLowerCase();
+
     this.cache.delete(key);
     console.log(`Invalidated cache for username: ${key}`);
   }

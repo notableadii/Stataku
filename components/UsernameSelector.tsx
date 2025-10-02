@@ -6,8 +6,9 @@ import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Avatar } from "@heroui/avatar";
 import { Spinner } from "@heroui/spinner";
-import { title, subtitle } from "@/components/primitives";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+
+import { title, subtitle } from "@/components/primitives";
 import { usernameChecker } from "@/lib/username-cache";
 import { createUsername } from "@/lib/turso";
 
@@ -57,6 +58,7 @@ export function UsernameSelector({
     async (inputUsername: string) => {
       if (inputUsername.length < 3) {
         setStatus("invalid");
+
         return;
       }
 
@@ -107,7 +109,7 @@ export function UsernameSelector({
     [], // Remove username dependency to prevent infinite recreation
   );
 
-  // Handle key down to prevent uppercase input and handle special keys
+  // Handle key down to prevent invalid characters and uppercase input
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Allow special keys like backspace, delete, arrow keys, etc.
     const allowedKeys = [
@@ -153,6 +155,15 @@ export function UsernameSelector({
       return; // Let the browser handle these keys normally
     }
 
+    // Check if the key is a valid character (letters, digits, underscores, periods)
+    const validPattern = /^[a-zA-Z0-9_.]$/;
+
+    if (!validPattern.test(e.key)) {
+      e.preventDefault();
+
+      return;
+    }
+
     // Prevent uppercase letters from being typed
     if (e.key >= "A" && e.key <= "Z") {
       e.preventDefault();
@@ -164,27 +175,42 @@ export function UsernameSelector({
         currentValue.slice(0, cursorPosition) +
         lowercaseKey +
         currentValue.slice(cursorPosition);
+
       handleUsernameChange(newValue);
     }
   };
 
-  // Handle paste to convert to lowercase
+  // Handle paste to convert to lowercase and filter invalid characters
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedText = e.clipboardData.getData("text").toLowerCase();
+
+    // Filter out invalid characters, keeping only letters, digits, underscores, and periods
+    const filteredText = pastedText.replace(/[^a-z0-9_.]/g, "");
+
     const currentValue = (e.target as HTMLInputElement).value;
     const cursorPosition = (e.target as HTMLInputElement).selectionStart || 0;
     const newValue =
       currentValue.slice(0, cursorPosition) +
-      pastedText +
+      filteredText +
       currentValue.slice(cursorPosition);
+
     handleUsernameChange(newValue);
+  };
+
+  // Validate username characters (only letters, digits, underscores, and periods)
+  const isValidUsername = (username: string): boolean => {
+    // Only allow letters, digits, underscores, and periods
+    const validPattern = /^[a-z0-9_.]+$/;
+
+    return validPattern.test(username);
   };
 
   // Handle username input changes
   const handleUsernameChange = (value: string) => {
     // Convert to lowercase automatically
     const lowercaseValue = value.toLowerCase();
+
     setUsername(lowercaseValue);
 
     // Clear existing timers
@@ -200,11 +226,19 @@ export function UsernameSelector({
     // Reset status for short usernames
     if (lowercaseValue.length < 3) {
       setStatus("invalid");
+
+      return;
+    }
+
+    // Check for invalid characters
+    if (!isValidUsername(lowercaseValue)) {
+      setStatus("invalid");
+
       return;
     }
 
     // Show checking status immediately for valid usernames
-    if (lowercaseValue.length >= 3) {
+    if (lowercaseValue.length >= 3 && isValidUsername(lowercaseValue)) {
       setStatus("checking");
     }
 
@@ -219,8 +253,10 @@ export function UsernameSelector({
       setStatus((prevStatus) => {
         if (prevStatus === "checking") {
           console.log("Status stuck in checking, resetting to error");
+
           return "error";
         }
+
         return prevStatus;
       });
     }, 4000); // 4 second fallback (1s delay + 3s for API call)
@@ -228,7 +264,11 @@ export function UsernameSelector({
 
   // Handle username creation
   const handleCreateUsername = async () => {
-    if (status !== "available" || username.length < 3) {
+    if (
+      status !== "available" ||
+      username.length < 3 ||
+      !isValidUsername(username)
+    ) {
       return;
     }
 
@@ -291,7 +331,11 @@ export function UsernameSelector({
         return (
           <div className="flex items-center gap-2 text-sm text-warning">
             <XMarkIcon className="w-4 h-4" />
-            <span>Username must be at least 3 characters</span>
+            <span>
+              {username.length < 3
+                ? "Username must be at least 3 characters"
+                : "Username can only contain letters, digits, underscores, and periods"}
+            </span>
           </div>
         );
       case "error":
@@ -368,10 +412,10 @@ export function UsernameSelector({
           <CardHeader className="flex flex-col gap-1 pb-0 px-6 pt-6">
             <div className="flex items-center gap-3">
               <Avatar
-                src="/api/avatar"
-                size="md"
                 className="w-12 h-12"
                 name={username || "user"}
+                size="md"
+                src="/api/avatar"
               />
               <div>
                 <h2 className="text-lg font-semibold">Choose Username</h2>
@@ -386,20 +430,21 @@ export function UsernameSelector({
             <div className="space-y-2">
               <Input
                 {...getInputProps()}
+                autoComplete="off"
                 label="Username"
-                variant="bordered"
+                spellCheck="false"
                 startContent="@"
+                style={{ textTransform: "lowercase" }}
+                variant="bordered"
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                style={{ textTransform: "lowercase" }}
-                autoComplete="off"
-                spellCheck="false"
               />
 
               {/* Helper Text */}
               <div className="text-xs text-default-400">
-                Usernames are automatically converted to lowercase • Database
-                check after 1 second of no typing
+                Usernames can only contain letters, digits, underscores, and
+                periods • Automatically converted to lowercase • Database check
+                after 1 second of no typing
               </div>
 
               {/* Status Display */}
@@ -409,22 +454,22 @@ export function UsernameSelector({
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <Button
-                color="primary"
-                size="lg"
                 className="flex-1"
-                onPress={handleCreateUsername}
+                color="primary"
                 isDisabled={status !== "available" || isCreating}
                 isLoading={isCreating}
+                size="lg"
+                onPress={handleCreateUsername}
               >
                 {isCreating ? "Creating..." : "Create Username"}
               </Button>
 
               <Button
                 color="default"
-                variant="bordered"
-                size="lg"
-                onPress={onCancel}
                 isDisabled={isCreating}
+                size="lg"
+                variant="bordered"
+                onPress={onCancel}
               >
                 Cancel
               </Button>

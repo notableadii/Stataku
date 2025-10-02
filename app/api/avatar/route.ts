@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import { join } from "path";
+
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error serving avatar:", error);
+
     return new NextResponse("Avatar not found", { status: 404 });
   }
 }

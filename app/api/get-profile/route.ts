@@ -1,80 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@libsql/client";
 
-// Initialize Turso client lazily
-function getTursoClient() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+import { withSecurity, sanitizeInput } from "@/lib/security";
+import { getProfile } from "@/lib/database-service";
 
-  if (!url || !authToken) {
-    throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
-    );
-  }
-
-  return createClient({
-    url,
-    authToken,
-  });
-}
-
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest, { user }) => {
   try {
-    const { userId } = await request.json();
+    // Check if request has a body
+    const contentType = request.headers.get("content-type");
+
+    if (!contentType || !contentType.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Content-Type must be application/json" },
+        { status: 400 },
+      );
+    }
+
+    // Get the request body with better error handling
+    let body;
+
+    try {
+      // Check if the request has a body first
+      const text = await request.text();
+
+      if (!text || text.trim() === "") {
+        return NextResponse.json(
+          { error: "Request body is empty" },
+          { status: 400 },
+        );
+      }
+
+      body = JSON.parse(text);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 },
+      );
+    }
+
+    const sanitizedBody = sanitizeInput(body);
+    const { userId } = sanitizedBody;
 
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Get user profile from profiles table
-    // First try with new schema, fallback to old schema if columns don't exist
-    const turso = getTursoClient();
-    let result;
-    try {
-      result = await turso.execute({
-        sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at FROM profiles WHERE id = ?",
-        args: [userId],
-      });
-    } catch (error) {
-      // Fallback to old schema if new columns don't exist
-      console.log("New schema columns not found, using old schema");
-      result = await turso.execute({
-        sql: "SELECT id, username, created_at FROM profiles WHERE id = ?",
-        args: [userId],
-      });
+    // Security check: Ensure user can only access their own profile
+    if (userId !== user.id) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only access your own profile" },
+        { status: 403 },
+      );
     }
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({
-        data: null,
-        error: null,
-      });
-    }
+    // Use the cached database service
+    const result = await getProfile(userId);
 
-    const row = result.rows[0];
-    const profile = {
-      id: row.id as string,
-      username: row.username as string,
-      slug: (row as any).slug || row.username, // Fallback to username if slug doesn't exist
-      display_name: (row as any).display_name || null,
-      bio: (row as any).bio || null,
-      avatar_url: (row as any).avatar_url || null,
-      banner_url: (row as any).banner_url || null,
-      created_at: row.created_at as string,
-    };
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
 
     return NextResponse.json({
-      data: profile,
+      data: result.data,
       error: null,
+      fromCache: result.fromCache,
     });
   } catch (error) {
     console.error("Error getting user profile:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-}
+});

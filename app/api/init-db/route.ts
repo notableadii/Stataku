@@ -8,7 +8,7 @@ function getTursoClient() {
 
   if (!url || !authToken) {
     throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.",
     );
   }
 
@@ -21,6 +21,7 @@ function getTursoClient() {
 export async function POST() {
   try {
     const turso = getTursoClient();
+
     // Create profiles table as specified in requirements
     // id references auth.users(id) from Supabase
     await turso.execute(`
@@ -122,9 +123,10 @@ export async function POST() {
     });
   } catch (error) {
     console.error("Error initializing database schema:", error);
+
     return NextResponse.json(
       { error: "Failed to initialize database schema" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

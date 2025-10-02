@@ -53,6 +53,7 @@ export class RealTimeUsernameChecker {
     // Prevent duplicate requests
     if (this.pendingChecks.has(normalizedUsername)) {
       console.log(`Duplicate request for ${normalizedUsername}, skipping`);
+
       return;
     }
 
