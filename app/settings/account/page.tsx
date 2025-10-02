@@ -191,11 +191,28 @@ export default function AccountSettingsPage() {
         console.error("Password creation error:", error);
         showToast(error.message, "error");
       } else {
-        showToast("Password created successfully", "success");
+        showToast(
+          "Password created successfully! You can now use email/password to sign in.",
+          "success"
+        );
         setNewPassword("");
         setConfirmPassword("");
-        // Refresh settings data to update hasPasswordAuth
-        await refreshSettingsData();
+
+        // Debug: Check user object immediately after password creation
+        console.log("=== PASSWORD CREATION DEBUG ===");
+        const { data: userAfterPassword } = await supabase.auth.getUser();
+        console.log(
+          "User after password creation:",
+          JSON.stringify(userAfterPassword?.user, null, 2)
+        );
+        console.log("=== END PASSWORD CREATION DEBUG ===");
+
+        // Add a small delay to ensure Supabase has updated the user metadata
+        setTimeout(async () => {
+          console.log("Refreshing settings data after password creation...");
+          // Refresh settings data to update hasPasswordAuth
+          await refreshSettingsData();
+        }, 1000);
       }
     } catch (error) {
       console.error("Password creation error:", error);
