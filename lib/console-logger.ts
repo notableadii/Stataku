@@ -61,9 +61,9 @@ export const logPageVisit = (pageName: string, customMessage?: string) => {
     // Method 3: ASCII art representation
     console.log(`
     ┌─────────────────┐
-    │   🎌 FAVICON   │
+    │   🎌 FAVICON    │
     │                 │
-    │   ${faviconUrl}    │
+    │   ${faviconUrl} │
     └─────────────────┘
     `);
 
