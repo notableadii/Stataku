@@ -24,15 +24,15 @@ export default function AppearanceSettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-2 xs:px-4 py-4 xs:py-8">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-              <div className="h-10 w-48 bg-default-200 rounded-lg animate-pulse" />
-              <div className="h-4 w-96 mt-2 bg-default-200 rounded animate-pulse" />
+            <div className="mb-4 xs:mb-8">
+              <div className="h-8 xs:h-10 w-48 bg-default-200 rounded-lg animate-pulse" />
+              <div className="h-4 w-80 xs:w-96 mt-2 bg-default-200 rounded animate-pulse" />
             </div>
-            <div className="space-y-6">
-              <div className="h-32 bg-default-200 rounded-lg animate-pulse" />
-              <div className="h-32 bg-default-200 rounded-lg animate-pulse" />
+            <div className="space-y-4 xs:space-y-6">
+              <div className="h-24 xs:h-32 bg-default-200 xs:rounded-lg animate-pulse" />
+              <div className="h-24 xs:h-32 bg-default-200 xs:rounded-lg animate-pulse" />
             </div>
           </div>
         </div>
@@ -49,25 +49,25 @@ export default function AppearanceSettingsPage() {
       {/* Navigation */}
       <SettingsNav />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 xs:px-4 py-4 xs:py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header Section */}
-          <div className="mb-8">
+          <div className="mb-4 xs:mb-8">
             <div className="mb-4">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <h1 className="text-2xl xs:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Appearance Settings
               </h1>
-              <p className="text-default-500 mt-1">
+              <p className="text-default-500 mt-1 text-sm xs:text-base">
                 Customize your visual experience
               </p>
             </div>
           </div>
 
           {/* Appearance Settings */}
-          <div className="space-y-6">
+          <div className="space-y-4 xs:space-y-6">
             {/* Dark Mode Setting */}
             <div>
-              <div className="bg-content1 border border-divider rounded-xl p-6">
+              <div className="xs:bg-content1 xs:border xs:border-divider xs:rounded-xl p-4 xs:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-semibold">Theme</h3>
@@ -82,9 +82,9 @@ export default function AppearanceSettingsPage() {
 
             {/* Theme Preview */}
             <div>
-              <div className="bg-content1 border border-divider rounded-xl p-6">
+              <div className="xs:bg-content1 xs:border xs:border-divider xs:rounded-xl p-4 xs:p-6">
                 <h3 className="text-lg font-semibold mb-4">Theme Preview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
                   {/* Light Theme Preview */}
                   <div
                     className={`p-4 rounded-lg border-2 transition-all bg-white ${

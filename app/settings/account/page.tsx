@@ -3,8 +3,6 @@
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Divider } from "@heroui/divider";
-import { Chip } from "@heroui/chip";
-import { Card, CardBody, CardHeader } from "@heroui/card";
 import { addToast } from "@heroui/toast";
 // import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,7 +31,7 @@ export default function AccountSettingsPage() {
   const showToast = (
     message: string,
     type: "success" | "error" | "warning" = "success",
-    title?: string,
+    title?: string
   ) => {
     addToast({
       title:
@@ -66,42 +64,42 @@ export default function AccountSettingsPage() {
           showToast(
             "This Google or Discord account is already linked to another user. Please unlink it from the other account first before linking it to this account.",
             "error",
-            "Account Already Linked",
+            "Account Already Linked"
           );
           break;
         case "oauth-invalid-state":
           showToast(
             "OAuth authentication failed. Please try linking your account again.",
             "error",
-            "Authentication Error",
+            "Authentication Error"
           );
           break;
         case "oauth-cancelled":
           showToast(
             "Account linking was cancelled. You can try again anytime.",
             "warning",
-            "Linking Cancelled",
+            "Linking Cancelled"
           );
           break;
         case "email-not-confirmed":
           showToast(
             "Please confirm your email address before linking additional accounts.",
             "error",
-            "Email Not Confirmed",
+            "Email Not Confirmed"
           );
           break;
         case "link-failed":
           showToast(
             "Unable to link account. Please check your connection and try again.",
             "error",
-            "Linking Failed",
+            "Linking Failed"
           );
           break;
         default:
           showToast(
             "An unexpected error occurred while linking your account. Please try again.",
             "error",
-            "Linking Error",
+            "Linking Error"
           );
       }
       // Clean up URL parameters
@@ -117,7 +115,7 @@ export default function AccountSettingsPage() {
           showToast(
             "Your account has been linked successfully! You can now sign in using this account.",
             "success",
-            "Account Linked",
+            "Account Linked"
           );
           // Refresh the settings data only if user is logged in
           if (user && !loading) {
@@ -136,7 +134,7 @@ export default function AccountSettingsPage() {
       showToast(
         "Your email address has been confirmed and updated successfully!",
         "success",
-        "Email Updated",
+        "Email Updated"
       );
       // Clean up URL parameters
       const url = new URL(window.location.href);
@@ -250,7 +248,7 @@ export default function AccountSettingsPage() {
       } else {
         showToast(
           "Please check your new email address to confirm the change. You will be redirected to the confirmation page after clicking the link in your email.",
-          "success",
+          "success"
         );
         setNewEmail("");
         // Refresh settings data to get updated user info
@@ -287,7 +285,7 @@ export default function AccountSettingsPage() {
     if (currentPassword === newPassword) {
       showToast(
         "New password must be different from current password",
-        "error",
+        "error"
       );
 
       return;
@@ -359,7 +357,7 @@ export default function AccountSettingsPage() {
         showToast(
           `Redirecting to ${provider}...`,
           "warning",
-          "Linking Account",
+          "Linking Account"
         );
         // The callback will handle the result and redirect back
       }
@@ -367,7 +365,7 @@ export default function AccountSettingsPage() {
       showToast(
         "Unable to initiate account linking. Please check your connection and try again.",
         "error",
-        "Linking Error",
+        "Linking Error"
       );
       setIsLinkingAccount(false);
     }
@@ -396,7 +394,7 @@ export default function AccountSettingsPage() {
         showToast(
           `${identity.provider} account unlinked successfully`,
           "success",
-          "Account Unlinked",
+          "Account Unlinked"
         );
         await refreshSettingsData();
       }
@@ -404,7 +402,7 @@ export default function AccountSettingsPage() {
       showToast(
         "Unable to unlink account. Please try again.",
         "error",
-        "Unlinking Error",
+        "Unlinking Error"
       );
     }
   };
@@ -412,7 +410,7 @@ export default function AccountSettingsPage() {
   const isProviderLinked = (provider: string) => {
     return (
       settingsData?.identities?.some(
-        (identity) => identity.provider === provider,
+        (identity) => identity.provider === provider
       ) || false
     );
   };
@@ -423,25 +421,21 @@ export default function AccountSettingsPage() {
   if (loading || settingsLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-2 xs:px-4 py-4 xs:py-8">
           <div className="max-w-6xl mx-auto">
             {/* Header Section Skeleton */}
-            <div className="mb-8">
+            <div className="mb-4 xs:mb-8">
               <div className="mb-4">
-                <Skeleton className="h-10 w-48 rounded-lg" />
-                <Skeleton className="h-4 w-96 mt-2 rounded" />
+                <Skeleton className="h-8 xs:h-10 w-48 rounded-lg" />
+                <Skeleton className="h-4 w-80 xs:w-96 mt-2 rounded" />
               </div>
+              {/* Mobile-only divider */}
+              <div className="w-full h-px bg-divider xs:hidden" />
             </div>
 
             {/* Combined Account Settings Card Skeleton */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div>
-                  <Skeleton className="h-6 w-40 rounded" />
-                  <Skeleton className="h-4 w-80 mt-2 rounded" />
-                </div>
-              </CardHeader>
-              <CardBody className="space-y-8">
+            <div className="xs:bg-content1 xs:border xs:border-divider xs:rounded-xl xs:shadow-small">
+              <div className="space-y-6 xs:space-y-8 xs:px-6 xs:pt-6 xs:pb-6">
                 {/* Email Address Section Skeleton */}
                 <div>
                   <div className="mb-4">
@@ -515,8 +509,8 @@ export default function AccountSettingsPage() {
                     </div>
                   </div>
                 </div>
-              </CardBody>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -532,31 +526,25 @@ export default function AccountSettingsPage() {
       {/* Navigation */}
       <SettingsNav />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 xs:px-4 py-4 xs:py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header Section */}
-          <div className="mb-8">
+          <div className="mb-4 xs:mb-8">
             <div className="mb-4">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <h1 className="text-2xl xs:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Account Settings
               </h1>
-              <p className="text-default-500 mt-1">
+              <p className="text-default-500 mt-1 text-sm xs:text-base">
                 Manage your account security and authentication
               </p>
             </div>
+            {/* Mobile-only divider */}
+            <div className="w-full h-px bg-divider xs:hidden" />
           </div>
 
           {/* Combined Account Settings Card */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div>
-                <h3 className="text-lg font-semibold">Account Settings</h3>
-                <p className="text-sm text-default-500">
-                  Manage your email, security, and account connections
-                </p>
-              </div>
-            </CardHeader>
-            <CardBody className="space-y-8">
+          <div className="xs:bg-content1 xs:border xs:border-divider xs:rounded-xl xs:shadow-small">
+            <div className="space-y-6 xs:space-y-8 xs:px-6 xs:pt-6 xs:pb-6">
               {/* Email Address Section */}
               <div>
                 <div className="mb-4">
@@ -767,15 +755,6 @@ export default function AccountSettingsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       {isProviderLinked("google") ? (
-                        <Chip color="success" size="sm">
-                          Connected
-                        </Chip>
-                      ) : (
-                        <Chip color="default" size="sm">
-                          Not connected
-                        </Chip>
-                      )}
-                      {isProviderLinked("google") ? (
                         <Button
                           color="danger"
                           size="sm"
@@ -783,7 +762,7 @@ export default function AccountSettingsPage() {
                           onPress={() => {
                             const googleIdentity =
                               settingsData?.identities?.find(
-                                (identity) => identity.provider === "google",
+                                (identity) => identity.provider === "google"
                               );
 
                             if (googleIdentity) {
@@ -822,15 +801,6 @@ export default function AccountSettingsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       {isProviderLinked("discord") ? (
-                        <Chip color="success" size="sm">
-                          Connected
-                        </Chip>
-                      ) : (
-                        <Chip color="default" size="sm">
-                          Not connected
-                        </Chip>
-                      )}
-                      {isProviderLinked("discord") ? (
                         <Button
                           color="danger"
                           size="sm"
@@ -838,7 +808,7 @@ export default function AccountSettingsPage() {
                           onPress={() => {
                             const discordIdentity =
                               settingsData?.identities?.find(
-                                (identity) => identity.provider === "discord",
+                                (identity) => identity.provider === "discord"
                               );
 
                             if (discordIdentity) {
@@ -863,8 +833,8 @@ export default function AccountSettingsPage() {
                   </div>
                 </div>
               </div>
-            </CardBody>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

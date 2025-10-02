@@ -31,7 +31,7 @@ const SettingsNav = () => {
 
   return (
     <div className="w-full mb-6">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-1 xs:px-2 sm:px-4">
         <nav className="flex items-center justify-between w-full relative">
           {navItems.map((item) => {
             const isActive = pathname === item.path;
@@ -40,12 +40,14 @@ const SettingsNav = () => {
             return (
               <Link key={item.path} className="flex-1" href={item.path}>
                 <div
-                  className={`relative flex items-center justify-center gap-2 px-4 py-4 cursor-pointer transition-colors ${
+                  className={`relative flex flex-col xs:flex-row items-center justify-center gap-1 xs:gap-2 px-0.5 xs:px-2 sm:px-4 py-2 xs:py-3 sm:py-4 cursor-pointer transition-colors ${
                     isActive ? "text-primary" : "text-white"
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium text-sm">{item.name}</span>
+                  <Icon className="w-4 h-4 xs:w-5 xs:h-5" />
+                  <span className="font-medium text-xs xs:text-sm leading-tight text-center">
+                    {item.name}
+                  </span>
                 </div>
               </Link>
             );
