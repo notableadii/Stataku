@@ -32,7 +32,7 @@ export default function SignUpPage() {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const router = useRouter();
-  const { user, profile: _profile, loading, profileLoading } = useAuth();
+  const { user, loading, profileLoading } = useAuth();
 
   // Log page visit with beautiful console message
   useEffect(() => {

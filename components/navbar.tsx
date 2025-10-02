@@ -154,8 +154,8 @@ export const Navbar = () => {
               ) : user ? (
                 <Button
                   className="text-sm font-normal text-warning-600 bg-warning-100"
-                  onPress={() => window.location.reload()}
                   variant="flat"
+                  onPress={() => window.location.reload()}
                 >
                   Profile Loading...
                 </Button>
@@ -238,9 +238,9 @@ export const Navbar = () => {
                   <NavbarMenuItem>
                     <Button
                       className="w-full text-warning-600 bg-warning-100"
-                      onPress={() => window.location.reload()}
                       size="lg"
                       variant="flat"
+                      onPress={() => window.location.reload()}
                     >
                       Profile Loading...
                     </Button>

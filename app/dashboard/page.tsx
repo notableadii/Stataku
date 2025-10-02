@@ -169,49 +169,6 @@ export default function DashboardPage() {
               variant="bordered"
               onPress={async () => {
                 try {
-                  // Get current session token for API authentication
-                  const {
-                    data: { session },
-                  } = await supabase.auth.getSession();
-                  const token = session?.access_token;
-
-                  if (!token) {
-                    alert("No authentication token available");
-                    return;
-                  }
-
-                  const response = await fetch("/api/test-email", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                  });
-                  const result = await response.json();
-                  console.log("Email test result:", result);
-
-                  if (result.success) {
-                    alert(
-                      "✅ Email test successful! Check your inbox for a test email."
-                    );
-                  } else {
-                    alert(
-                      `❌ Email test failed: ${result.error}\n\nDetails: ${result.details}\n\nPlease check your SMTP configuration in .env.local`
-                    );
-                  }
-                } catch (error) {
-                  console.error("Error testing email:", error);
-                  alert("Error testing email functionality");
-                }
-              }}
-            >
-              Test Email
-            </Button>
-            <Button
-              color="warning"
-              variant="bordered"
-              onPress={async () => {
-                try {
                   const response = await fetch("/api/resend-welcome-email", {
                     method: "POST",
                     headers: {
@@ -238,13 +195,6 @@ export default function DashboardPage() {
               }}
             >
               Resend Welcome Email
-            </Button>
-            <Button
-              color="success"
-              variant="bordered"
-              onPress={() => router.push("/test-email")}
-            >
-              📧 Test Email Center
             </Button>
             <Button
               color="secondary"

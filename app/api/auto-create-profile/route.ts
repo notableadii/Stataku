@@ -14,7 +14,7 @@ function getTursoClient() {
 
   if (!url || !authToken) {
     throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.",
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
     );
   }
 
@@ -77,7 +77,7 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
     });
 
     console.log(
-      `Auto-created profile for user ${user.id} with username ${username}`,
+      `Auto-created profile for user ${user.id} with username ${username}`
     );
 
     return NextResponse.json({
@@ -107,7 +107,7 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
         success: false,
         error: "Failed to create profile automatically",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });

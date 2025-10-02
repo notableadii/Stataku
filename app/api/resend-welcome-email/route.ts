@@ -10,7 +10,7 @@ function getTursoClient() {
 
   if (!url || !authToken) {
     throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.",
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
     );
   }
 
@@ -20,13 +20,10 @@ function getTursoClient() {
   });
 }
 
-/**
- * Resend welcome email to users who didn't receive it
- * This endpoint can be used to manually trigger welcome emails
- */
 export const POST = withSecurity(async (request: NextRequest, { user }) => {
   try {
     const turso = getTursoClient();
+    const { forceSend } = (await request.json().catch(() => ({}))) || {};
 
     // Check current profile status
     const profileResult = await turso.execute({
@@ -40,19 +37,33 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
           success: false,
           error: "Profile not found",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
     const profile = profileResult.rows[0];
 
-    // Send welcome email (force resend)
-    console.log(`📧 Resending welcome email to ${user.email}`);
+    // Check if welcome email should be sent (one-time only)
+    const shouldSendEmail = profile.email_sent === "No" || forceSend;
 
+    if (!shouldSendEmail) {
+      return NextResponse.json({
+        success: true,
+        message: "Welcome email already sent",
+        data: {
+          emailSent: false,
+          reason: "Welcome email already sent to this user",
+          email: user.email,
+          username: profile.username,
+        },
+      });
+    }
+
+    // Send welcome email using SMTP
     const emailResult = await sendWelcomeEmail(
       user.email,
       profile.username as string,
-      (profile as any).display_name || undefined,
+      (profile as any).display_name || undefined
     );
 
     if (emailResult.success) {
@@ -62,11 +73,11 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
         args: [user.id],
       });
 
-      console.log(`✅ Welcome email resent to user ${user.id} (${user.email})`);
+      console.log(`Welcome email sent to user ${user.id} (${user.email})`);
 
       return NextResponse.json({
         success: true,
-        message: "Welcome email resent successfully",
+        message: "Welcome email sent successfully",
         data: {
           emailSent: true,
           email: user.email,
@@ -77,10 +88,10 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
       return NextResponse.json(
         {
           success: false,
-          error: emailResult.error || "Failed to resend email",
-          retryable: emailResult.retryable || false,
+          error: emailResult.error || "Failed to send email",
+          retryable: emailResult.retryable,
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   } catch (error: any) {
@@ -92,7 +103,7 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
         error: "Failed to resend welcome email",
         details: error.message,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
