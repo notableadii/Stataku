@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -17,14 +17,30 @@ import { UserProfileSkeleton } from "@/components/skeletons";
 export default function DashboardPage() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
+  const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
+  const profileRef = useRef(profile);
+
+  // Update profile ref whenever profile changes
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/signin");
-    } else if (!loading && user && !profile) {
-      router.push("/create-username");
+    } else if (!loading && user && !profile && !hasCheckedProfile) {
+      // Add a delay before redirecting to create-username to allow profile to load
+      setHasCheckedProfile(true);
+      const timer = setTimeout(() => {
+        // Use ref to get the current profile state at timeout
+        if (!profileRef.current) {
+          router.push("/create-username");
+        }
+      }, 2000); // 2 second delay
+
+      return () => clearTimeout(timer);
     }
-  }, [user, profile, loading, router]);
+  }, [user, profile, loading, router, hasCheckedProfile]);
 
   const handleSignOut = async () => {
     await signOut();

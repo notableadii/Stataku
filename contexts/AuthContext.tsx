@@ -52,7 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       previousUserRef.current = initialUser;
 
       if (session?.user) {
-        await loadUserProfile(session.user.id);
+        // Force load profile on initial session load
+        await loadUserProfile(session.user.id, true);
       }
 
       setLoading(false);
@@ -95,7 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       previousUserRef.current = newUser;
 
       if (session?.user) {
-        await loadUserProfile(session.user.id);
+        // Force load profile on auth state change (signin/signup)
+        await loadUserProfile(session.user.id, true);
       } else {
         setProfile(null);
       }
@@ -107,11 +109,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadUserProfile = useCallback(
-    async (userId: string) => {
+    async (userId: string, forceLoad = false) => {
       const now = Date.now();
 
       // Debounce: only fetch if it's been more than 10 seconds since last fetch
-      if (now - lastProfileFetchRef.current < 10000) {
+      // Skip debounce if forceLoad is true (for fresh authentications)
+      if (!forceLoad && now - lastProfileFetchRef.current < 10000) {
         console.log("Profile fetch debounced - too soon since last fetch", {
           timeSinceLastFetch: now - lastProfileFetchRef.current,
           lastFetch: lastProfileFetchRef.current,
