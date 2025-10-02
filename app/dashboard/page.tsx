@@ -17,7 +17,7 @@ import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileLoading, profileError } = useAuth();
 
   // Log page visit with beautiful console message
   useEffect(() => {
@@ -25,19 +25,53 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/signin");
-    } else if (!loading && user && !profile) {
-      router.push("/create-username");
+    // Don't make redirect decisions while auth is loading
+    if (loading) {
+      return;
     }
-  }, [user, profile, loading, router]);
+
+    // Redirect to signin if no user
+    if (!user) {
+      router.push("/signin");
+      return;
+    }
+
+    // If we have a user but no profile, we need to determine why:
+    if (!profile) {
+      // Still loading profile - wait
+      if (profileLoading) {
+        return;
+      }
+
+      // Profile loading is complete, check the error to determine next action
+      if (profileError) {
+        // Check if it's a "profile not found" error (legitimate new user)
+        if (
+          profileError.includes("Profile not found") ||
+          profileError.includes("not found") ||
+          profileError.includes("No profile found")
+        ) {
+          // This is a new user who needs to create a username
+          router.push("/create-username");
+        } else {
+          // This is a temporary error (network, auth, etc.) - don't redirect
+          // The user will see an error state in the UI and can retry
+          console.error("Profile loading error:", profileError);
+        }
+      } else {
+        // No error but no profile - this is also a new user case
+        router.push("/create-username");
+      }
+    }
+  }, [user, profile, loading, profileLoading, profileError, router]);
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
   };
 
-  if (loading) {
+  // Show loading while auth or profile is loading
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen flex items-start justify-center bg-background -mt-10 sm:pt-3 md:pt-4 lg:pt-6 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl w-full space-y-6">
@@ -47,7 +81,41 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user || !profile) {
+  // Show error state if there's a profile loading error that's not "profile not found"
+  if (
+    !user ||
+    (!profile && profileError && !profileError.includes("not found"))
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-danger">
+            {!user ? "Authentication Required" : "Profile Loading Error"}
+          </h1>
+          <p className="text-default-500">
+            {!user
+              ? "Please sign in to access your dashboard."
+              : `Failed to load profile: ${profileError}`}
+          </p>
+          <Button
+            color="primary"
+            onPress={() => {
+              if (!user) {
+                router.push("/signin");
+              } else {
+                window.location.reload();
+              }
+            }}
+          >
+            {!user ? "Sign In" : "Retry"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If we reach here without a profile, it means we're still determining the redirect
+  if (!profile) {
     return null;
   }
 

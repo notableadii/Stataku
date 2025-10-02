@@ -28,22 +28,22 @@ export default function SignInPage() {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileLoading } = useAuth();
 
   // Log page visit with beautiful console message
   useEffect(() => {
     logPageVisit("Sign In", PAGE_MESSAGES["Sign In"]);
   }, []);
 
-  // Redirect if user is already signed in
+  // Redirect if user is already signed in and profile is loaded
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && !profileLoading && user) {
       router.push("/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, loading, profileLoading, router]);
 
-  // Show loading while checking authentication status
-  if (loading) {
+  // Show loading while checking authentication status or profile
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen flex items-start justify-center bg-background -mt-10 sm:pt-3 md:pt-4 lg:pt-6 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-4 sm:space-y-6">
@@ -90,10 +90,8 @@ export default function SignInPage() {
           return;
         }
 
-        // Email confirmed, add small delay to allow profile to load
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1000);
+        // Email confirmed, redirect to dashboard (AuthContext will handle profile loading)
+        router.push("/dashboard");
       }
     } catch (_err) {
       setError("An unexpected error occurred");
@@ -128,10 +126,8 @@ export default function SignInPage() {
 
   const handleEmailConfirmed = () => {
     setShowEmailConfirmation(false);
-    // Add small delay to allow profile to load
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1000);
+    // Redirect to dashboard (AuthContext will handle profile loading)
+    router.push("/dashboard");
   };
 
   if (showSkeleton) {

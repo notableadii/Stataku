@@ -12,17 +12,15 @@ import { User, Session } from "@supabase/supabase-js";
 import { addToast } from "@heroui/toast";
 
 import { supabase } from "@/lib/supabase";
-import {
-  getUserProfile,
-  getUserProfileNoCache,
-  UserProfile,
-} from "@/lib/turso";
+import { getUserProfile, UserProfile } from "@/lib/turso";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
+  profileLoading: boolean;
+  profileError: string | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   forceRefreshProfile: () => Promise<void>;
@@ -35,9 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const lastProfileFetchRef = useRef<number>(0);
   const previousUserRef = useRef<User | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
+  const profileLoadingRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Get initial session
@@ -107,17 +108,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadUserProfile = useCallback(
-    async (userId: string) => {
+    async (userId: string, forceLoad = false) => {
       const now = Date.now();
 
-      // Debounce: only fetch if it's been more than 2 seconds since last fetch
-      if (now - lastProfileFetchRef.current < 2000) {
-        // Profile fetch debounced - too soon since last fetch
-
+      // Prevent concurrent profile loading
+      if (profileLoadingRef.current && !forceLoad) {
         return;
       }
 
-      // Fetching user profile
+      // Debounce: only fetch if it's been more than 1 second since last fetch (reduced from 2 seconds)
+      if (!forceLoad && now - lastProfileFetchRef.current < 1000) {
+        return;
+      }
+
+      profileLoadingRef.current = true;
+      setProfileLoading(true);
+      setProfileError(null);
+
       try {
         lastProfileFetchRef.current = now;
         const { data, error } = await getUserProfile(userId);
@@ -143,21 +150,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 if (!retryError && retryData) {
                   setProfile(retryData);
-                  return;
+                  setProfileError(null);
+                } else {
+                  // If retry failed, this might be a legitimate "no profile exists" case
+                  setProfile(null);
+                  setProfileError(retryError?.message || "Profile not found");
                 }
+              } else {
+                setProfile(null);
+                setProfileError("Authentication failed");
               }
             } catch (refreshError) {
               console.error("Failed to refresh session:", refreshError);
+              setProfile(null);
+              setProfileError("Session refresh failed");
             }
+          } else {
+            // Non-authentication error - could be "profile not found" which is valid for new users
+            setProfile(null);
+            setProfileError(error.message);
           }
-
-          setProfile(null);
         } else {
           setProfile(data);
+          setProfileError(null);
         }
       } catch (error) {
         console.error("Error loading user profile:", error);
         setProfile(null);
+        setProfileError("Network error");
+      } finally {
+        profileLoadingRef.current = false;
+        setProfileLoading(false);
       }
     },
     [] // No dependencies needed now
@@ -171,28 +194,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const forceRefreshProfile = useCallback(async () => {
     if (user) {
-      try {
-        lastProfileFetchRef.current = 0; // Reset the debounce timer
-        const { data, error } = await getUserProfileNoCache(user.id);
-
-        if (error) {
-          console.error("Error loading user profile:", error);
-          setProfile(null);
-        } else {
-          setProfile(data);
-        }
-      } catch (error) {
-        console.error("Error loading user profile:", error);
-        setProfile(null);
-      }
+      await loadUserProfile(user.id, true); // Force load bypasses debounce
     }
-  }, [user]);
+  }, [user, loadUserProfile]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setProfile(null);
+    setProfileLoading(false);
+    setProfileError(null);
   };
 
   const value = {
@@ -200,6 +212,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     profile,
     loading,
+    profileLoading,
+    profileError,
     signOut,
     refreshProfile,
     forceRefreshProfile,
