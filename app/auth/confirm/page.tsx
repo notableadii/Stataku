@@ -118,9 +118,7 @@ export default function AuthConfirmPage() {
     router.push("/settings");
   };
 
-  const handleGoHome = () => {
-    router.push("/");
-  };
+  // Navigation handled by router.push calls directly
 
   if (isLoading) {
     return (

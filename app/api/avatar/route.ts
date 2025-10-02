@@ -3,7 +3,7 @@ import { join } from "path";
 
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Read the universal avatar image
     const avatarPath = join(

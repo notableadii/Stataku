@@ -31,7 +31,7 @@ export default function SignUpPage() {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile: _profile, loading } = useAuth();
 
   // Redirect if user is already signed in
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function SignUpPage() {
         setIsLoading(false);
         router.push("/create-username");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
       setIsLoading(false);
       setShowSkeleton(false);
@@ -143,7 +143,7 @@ export default function SignUpPage() {
       if (error) {
         setError(error.message);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     }
   };
@@ -155,7 +155,7 @@ export default function SignUpPage() {
       if (error) {
         setError(error.message);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     }
   };

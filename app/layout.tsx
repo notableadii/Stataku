@@ -103,7 +103,7 @@ export default function RootLayout({
         className={clsx(
           "min-h-screen text-foreground bg-background font-sans antialiased",
           fontSans.variable,
-          fontWaterlily.variable
+          fontWaterlily.variable,
         )}
       >
         <Providers

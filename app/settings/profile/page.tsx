@@ -43,7 +43,7 @@ export default function ProfileSettingsPage() {
         throw new Error("No user found");
       }
 
-      const { data, error } = await updateUserProfile(user.id, {
+      const { data: _data, error } = await updateUserProfile(user.id, {
         display_name: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,

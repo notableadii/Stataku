@@ -47,7 +47,7 @@ export function GlobalLoadingSpinner({ isVisible }: GlobalLoadingSpinnerProps) {
     currentTheme === "dark" || (currentTheme === "system" && prefersDark);
   const backgroundColor = isDark ? "bg-black" : "bg-white";
   const textColor = isDark ? "text-white" : "text-black";
-  const _spinnerColor = isDark ? "white" : "black";
+  // Spinner color is handled by HeroUI component styles
 
   return (
     <div

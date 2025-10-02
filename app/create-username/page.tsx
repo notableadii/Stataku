@@ -1,9 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
-// Motion import removed - using simple hover effects only
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { UsernameSelector } from "@/components/UsernameSelector";
 import { useAuth } from "@/contexts/AuthContext";

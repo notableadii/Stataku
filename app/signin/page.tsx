@@ -91,7 +91,7 @@ export default function SignInPage() {
           router.push("/create-username");
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
       setIsLoading(false);
       setShowSkeleton(false);
@@ -105,7 +105,7 @@ export default function SignInPage() {
       if (error) {
         setError(error.message);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     }
   };
@@ -117,7 +117,7 @@ export default function SignInPage() {
       if (error) {
         setError(error.message);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     }
   };

@@ -12,7 +12,7 @@ interface GlobalLoadingWrapperProps {
 
 export function GlobalLoadingWrapper({ children }: GlobalLoadingWrapperProps) {
   const { isInitialLoading } = useGlobalLoading();
-  const [showContent, setShowContent] = useState(!isInitialLoading);
+  const [_showContent, setShowContent] = useState(!isInitialLoading);
 
   useEffect(() => {
     if (!isInitialLoading) {

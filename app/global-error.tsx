@@ -5,14 +5,14 @@ import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 
 export default function GlobalError({
-  error,
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <html>
+    <html lang="en">
       <head>
         <title>Error - Stataku</title>
         <meta

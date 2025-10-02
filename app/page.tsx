@@ -4,6 +4,7 @@ import { button as buttonStyles } from "@heroui/theme";
 
 import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
+
 import { HomeClient } from "./home-client";
 
 export const metadata: Metadata = {
