@@ -36,7 +36,7 @@ export default function SignUpPage() {
   // Redirect if user is already signed in
   useEffect(() => {
     if (!loading && user) {
-      router.push("/");
+      router.push("/dashboard");
     }
   }, [user, loading, router]);
 
@@ -124,10 +124,11 @@ export default function SignUpPage() {
           return;
         }
 
-        // Email already confirmed, proceed to username creation
+        // Email already confirmed, let AuthContext handle profile loading
         setShowSkeleton(false);
         setIsLoading(false);
-        router.push("/create-username");
+        // New users will be redirected to create-username by the middleware/auth logic
+        router.push("/dashboard");
       }
     } catch (_err) {
       setError("An unexpected error occurred");
@@ -162,7 +163,8 @@ export default function SignUpPage() {
 
   const handleEmailConfirmed = () => {
     setShowEmailConfirmation(false);
-    router.push("/create-username");
+    // Let AuthContext handle profile loading and redirect logic
+    router.push("/dashboard");
   };
 
   if (showSkeleton) {

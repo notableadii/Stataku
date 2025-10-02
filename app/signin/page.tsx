@@ -32,7 +32,7 @@ export default function SignInPage() {
   // Redirect if user is already signed in
   useEffect(() => {
     if (!loading && user) {
-      router.push("/");
+      router.push("/dashboard");
     }
   }, [user, loading, router]);
 
@@ -84,12 +84,9 @@ export default function SignInPage() {
           return;
         }
 
-        // Email confirmed, check if user has a profile (username)
-        if (profile) {
-          router.push("/dashboard");
-        } else {
-          router.push("/create-username");
-        }
+        // Email confirmed, wait for profile to load then redirect
+        // Don't redirect immediately - let AuthContext handle the profile loading
+        router.push("/dashboard");
       }
     } catch (_err) {
       setError("An unexpected error occurred");
@@ -124,12 +121,8 @@ export default function SignInPage() {
 
   const handleEmailConfirmed = () => {
     setShowEmailConfirmation(false);
-    // Check if user has a profile (username)
-    if (profile) {
-      router.push("/dashboard");
-    } else {
-      router.push("/create-username");
-    }
+    // Let AuthContext handle profile loading and redirect logic
+    router.push("/dashboard");
   };
 
   if (showSkeleton) {

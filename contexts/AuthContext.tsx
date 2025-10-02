@@ -138,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
       }
     },
-    [], // No dependencies needed now
+    [] // No dependencies needed now
   );
 
   const refreshProfile = useCallback(async () => {

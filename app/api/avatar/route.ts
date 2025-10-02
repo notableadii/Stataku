@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest) {
       process.cwd(),
       "public",
       "avatars",
-      "universal-avatar.jpg",
+      "universal-avatar.jpg"
     );
     const avatarBuffer = await readFile(avatarPath);
 

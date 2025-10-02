@@ -32,7 +32,7 @@ export default function ProfilePage() {
         setError(null);
 
         console.log(
-          `Fetching profile ${forceRefresh ? "(no cache)" : "(with cache)"} for username: ${username}`,
+          `Fetching profile ${forceRefresh ? "(no cache)" : "(with cache)"} for username: ${username}`
         );
         const { data, error: fetchError } = forceRefresh
           ? await getUserProfileBySlugNoCache(username)
@@ -75,13 +75,13 @@ export default function ProfilePage() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Failed to fetch profile",
+          err instanceof Error ? err.message : "Failed to fetch profile"
         );
       } finally {
         setLoading(false);
       }
     },
-    [username],
+    [username]
   );
 
   useEffect(() => {
@@ -104,20 +104,7 @@ export default function ProfilePage() {
     }
   }, [isOwnProfile, currentUserProfile]);
 
-  // Force refresh profile data when user navigates back to their profile after editing
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && isOwnProfile) {
-        console.log("Page became visible, refreshing profile data");
-        fetchProfile(true); // Force refresh without cache
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [isOwnProfile, fetchProfile]);
+  // Removed visibilitychange listener to prevent unnecessary database fetches on tab switches
 
   if (usernameNotFound) {
     return (
