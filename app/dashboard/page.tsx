@@ -7,17 +7,19 @@ import { Button } from "@heroui/button";
 import { Avatar } from "@heroui/avatar";
 import { Chip } from "@heroui/chip";
 import { motion } from "framer-motion";
+import NextLink from "next/link";
 
 import { title, subtitle } from "@/components/primitives";
 import { useAuth } from "@/contexts/AuthContext";
-import { signOut } from "@/lib/supabase";
+import { signOut, supabase } from "@/lib/supabase";
 import { UserProfileSkeleton } from "@/components/skeletons";
 import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 // Animation imports removed - using simple hover effects only
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, profile, loading, profileLoading, profileError } = useAuth();
+  const { user, profile, loading, profileLoading, profileError, session } =
+    useAuth();
 
   // Log page visit with beautiful console message
   useEffect(() => {
@@ -36,31 +38,18 @@ export default function DashboardPage() {
       return;
     }
 
-    // If we have a user but no profile, we need to determine why:
+    // If we have a user but no profile, wait for auto-creation to complete
     if (!profile) {
       // Still loading profile - wait
       if (profileLoading) {
         return;
       }
 
-      // Profile loading is complete, check the error to determine next action
+      // Profile loading is complete, but still no profile
+      // This should be rare now with auto-creation, but handle gracefully
       if (profileError) {
-        // Check if it's a "profile not found" error (legitimate new user)
-        if (
-          profileError.includes("Profile not found") ||
-          profileError.includes("not found") ||
-          profileError.includes("No profile found")
-        ) {
-          // This is a new user who needs to create a username
-          router.push("/create-username");
-        } else {
-          // This is a temporary error (network, auth, etc.) - don't redirect
-          // The user will see an error state in the UI and can retry
-          console.error("Profile loading error:", profileError);
-        }
-      } else {
-        // No error but no profile - this is also a new user case
-        router.push("/create-username");
+        console.error("Profile loading error:", profileError);
+        // Don't redirect - show error state instead
       }
     }
   }, [user, profile, loading, profileLoading, profileError, router]);
@@ -114,9 +103,160 @@ export default function DashboardPage() {
     );
   }
 
-  // If we reach here without a profile, it means we're still determining the redirect
+  // If we reach here without a profile, show debugging information
   if (!profile) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-md">
+          <h1 className="text-2xl font-bold text-warning">Profile Missing</h1>
+          <p className="text-default-500">
+            User is authenticated but profile is not available.
+          </p>
+          <div className="bg-content1 p-4 rounded-lg text-left text-sm">
+            <h3 className="font-semibold mb-2">Debug Information:</h3>
+            <ul className="space-y-1 text-default-600">
+              <li>User ID: {user?.id}</li>
+              <li>User Email: {user?.email}</li>
+              <li>Profile Loading: {profileLoading ? "Yes" : "No"}</li>
+              <li>Profile Error: {profileError || "None"}</li>
+              <li>Auth Loading: {loading ? "Yes" : "No"}</li>
+            </ul>
+          </div>
+          <div className="flex gap-2 justify-center flex-wrap">
+            <Button color="primary" onPress={() => window.location.reload()}>
+              Reload Page
+            </Button>
+            <Button
+              color="success"
+              variant="bordered"
+              onPress={async () => {
+                try {
+                  // Get current session token for API authentication
+                  const {
+                    data: { session },
+                  } = await supabase.auth.getSession();
+                  const token = session?.access_token;
+
+                  if (!token) {
+                    alert("No authentication token available");
+                    return;
+                  }
+
+                  const response = await fetch("/api/force-create-profile", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                  });
+                  const result = await response.json();
+                  console.log("Force create profile result:", result);
+                  if (result.success) {
+                    window.location.reload();
+                  } else {
+                    alert("Failed to create profile: " + result.error);
+                  }
+                } catch (error) {
+                  console.error("Error creating profile:", error);
+                  alert("Error creating profile");
+                }
+              }}
+            >
+              Create Profile
+            </Button>
+            <Button
+              color="warning"
+              variant="bordered"
+              onPress={async () => {
+                try {
+                  // Get current session token for API authentication
+                  const {
+                    data: { session },
+                  } = await supabase.auth.getSession();
+                  const token = session?.access_token;
+
+                  if (!token) {
+                    alert("No authentication token available");
+                    return;
+                  }
+
+                  const response = await fetch("/api/test-email", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                  });
+                  const result = await response.json();
+                  console.log("Email test result:", result);
+
+                  if (result.success) {
+                    alert(
+                      "✅ Email test successful! Check your inbox for a test email."
+                    );
+                  } else {
+                    alert(
+                      `❌ Email test failed: ${result.error}\n\nDetails: ${result.details}\n\nPlease check your SMTP configuration in .env.local`
+                    );
+                  }
+                } catch (error) {
+                  console.error("Error testing email:", error);
+                  alert("Error testing email functionality");
+                }
+              }}
+            >
+              Test Email
+            </Button>
+            <Button
+              color="warning"
+              variant="bordered"
+              onPress={async () => {
+                try {
+                  const response = await fetch("/api/resend-welcome-email", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${session?.access_token}`,
+                    },
+                  });
+
+                  const result = await response.json();
+
+                  if (response.ok && result.success) {
+                    alert(
+                      `✅ Welcome email resent successfully!\n\nEmail: ${result.data.email}\nUsername: ${result.data.username}`
+                    );
+                  } else {
+                    alert(
+                      `❌ Failed to resend welcome email: ${result.error}\n\nRetryable: ${result.retryable ? "Yes" : "No"}`
+                    );
+                  }
+                } catch (error) {
+                  console.error("Error resending welcome email:", error);
+                  alert("Error resending welcome email");
+                }
+              }}
+            >
+              Resend Welcome Email
+            </Button>
+            <Button
+              color="success"
+              variant="bordered"
+              onPress={() => router.push("/test-email")}
+            >
+              📧 Test Email Center
+            </Button>
+            <Button
+              color="secondary"
+              variant="bordered"
+              onPress={() => router.push("/signin")}
+            >
+              Sign In Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -131,6 +271,48 @@ export default function DashboardPage() {
             Your anime and manga tracking dashboard
           </p>
         </div>
+
+        {/* Profile Completion Notification */}
+        {profile && !profile.last_edit && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full"
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-warning bg-warning-50/50">
+              <CardBody className="py-4 px-4 sm:px-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-warning-100 flex items-center justify-center">
+                      <span className="text-warning-600 text-xl">⚠️</span>
+                    </div>
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-semibold text-warning-800 mb-1">
+                      Complete Your Profile
+                    </h3>
+                    <p className="text-warning-700 text-sm mb-3">
+                      You haven&apos;t updated your profile yet! Customize your
+                      username, display name, and bio to make your profile
+                      uniquely yours.
+                    </p>
+                    <Button
+                      as={NextLink}
+                      className="w-full sm:w-auto"
+                      color="warning"
+                      href="/settings/profile"
+                      size="sm"
+                      variant="solid"
+                    >
+                      Update Profile
+                    </Button>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
+        )}
 
         {/* User Profile Card */}
         <motion.div transition={{ duration: 0.2 }} whileHover={{ y: -2 }}>

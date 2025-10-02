@@ -98,7 +98,7 @@ export function EmailConfirmationDialog({
         type: "signup",
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/create-username`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 

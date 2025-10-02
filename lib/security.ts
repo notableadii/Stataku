@@ -161,7 +161,8 @@ export function isValidEmail(email: string): boolean {
  * Validate username format
  */
 export function isValidUsername(username: string): boolean {
-  const usernameRegex = /^[a-zA-Z0-9_.-]{3,30}$/;
+  // Only allow lowercase letters, numbers, underscores, and periods
+  const usernameRegex = /^[a-z0-9_.]{3,30}$/;
 
   return usernameRegex.test(username);
 }
@@ -182,8 +183,8 @@ export function isValidPassword(password: string): boolean {
 export function withSecurity(
   handler: (
     request: NextRequest,
-    context: { user: any },
-  ) => Promise<NextResponse>,
+    context: { user: any }
+  ) => Promise<NextResponse>
 ) {
   return async (request: NextRequest) => {
     try {
@@ -193,7 +194,7 @@ export function withSecurity(
       if (!checkRateLimit(clientIP)) {
         return NextResponse.json(
           { error: "Rate limit exceeded. Please try again later." },
-          { status: 429 },
+          { status: 429 }
         );
       }
 
@@ -203,7 +204,7 @@ export function withSecurity(
       if (sessionError || !user) {
         return NextResponse.json(
           { error: "Authentication required" },
-          { status: 401 },
+          { status: 401 }
         );
       }
 
@@ -214,7 +215,7 @@ export function withSecurity(
 
       return NextResponse.json(
         { error: "Internal server error" },
-        { status: 500 },
+        { status: 500 }
       );
     }
   };
@@ -224,7 +225,7 @@ export function withSecurity(
  * Security middleware for public API routes (with rate limiting only)
  */
 export function withPublicSecurity(
-  handler: (request: NextRequest) => Promise<NextResponse>,
+  handler: (request: NextRequest) => Promise<NextResponse>
 ) {
   return async (request: NextRequest) => {
     try {
@@ -234,7 +235,7 @@ export function withPublicSecurity(
       if (!checkRateLimit(clientIP)) {
         return NextResponse.json(
           { error: "Rate limit exceeded. Please try again later." },
-          { status: 429 },
+          { status: 429 }
         );
       }
 
@@ -245,7 +246,7 @@ export function withPublicSecurity(
 
       return NextResponse.json(
         { error: "Internal server error" },
-        { status: 500 },
+        { status: 500 }
       );
     }
   };
@@ -256,7 +257,7 @@ export function withPublicSecurity(
  */
 export function validateBodySize(
   body: string,
-  maxSize: number = 1024 * 1024,
+  maxSize: number = 1024 * 1024
 ): boolean {
   return body.length <= maxSize;
 }
@@ -295,14 +296,14 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
   // Content Security Policy
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none';",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none';"
   );
 
   // HSTS (only in production)
   if (process.env.NODE_ENV === "production") {
     response.headers.set(
       "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains; preload",
+      "max-age=31536000; includeSubDomains; preload"
     );
   }
 

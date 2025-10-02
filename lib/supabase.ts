@@ -87,7 +87,7 @@ export const signInWithGoogle = async () => {
   const { data, error } = await client.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/create-username`,
+      redirectTo: `${window.location.origin}/dashboard`,
     },
   });
 
@@ -99,7 +99,7 @@ export const signInWithDiscord = async () => {
   const { data, error } = await client.auth.signInWithOAuth({
     provider: "discord",
     options: {
-      redirectTo: `${window.location.origin}/create-username`,
+      redirectTo: `${window.location.origin}/dashboard`,
     },
   });
 

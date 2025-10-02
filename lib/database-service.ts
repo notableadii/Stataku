@@ -18,7 +18,7 @@ function getTursoClient() {
 
   if (!url || !authToken) {
     throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.",
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
     );
   }
 
@@ -37,6 +37,8 @@ export interface Profile {
   avatar_url: string | null;
   banner_url: string | null;
   created_at: string;
+  last_edit: string | null;
+  email_sent: string;
 }
 
 export interface DatabaseResult<T> {
@@ -49,7 +51,7 @@ export interface DatabaseResult<T> {
  * Get user profile by ID with caching
  */
 export async function getProfile(
-  userId: string,
+  userId: string
 ): Promise<DatabaseResult<Profile>> {
   try {
     // Check cache first
@@ -69,7 +71,7 @@ export async function getProfile(
 
     // Cache miss - fetch from database
     console.log(
-      `Cache miss - fetching profile from database for userId: ${userId}`,
+      `Cache miss - fetching profile from database for userId: ${userId}`
     );
     const turso = getTursoClient();
 
@@ -77,7 +79,7 @@ export async function getProfile(
 
     try {
       result = await turso.execute({
-        sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at FROM profiles WHERE id = ?",
+        sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at, last_edit, email_sent FROM profiles WHERE id = ?",
         args: [userId],
       });
     } catch (error) {
@@ -110,6 +112,8 @@ export async function getProfile(
       avatar_url: (row as any).avatar_url || null,
       banner_url: (row as any).banner_url || null,
       created_at: row.created_at as string,
+      last_edit: (row as any).last_edit || null,
+      email_sent: (row as any).email_sent || "No",
     };
 
     // Cache the result
@@ -135,11 +139,11 @@ export async function getProfile(
  * Get user profile by ID WITHOUT caching (for real-time updates)
  */
 export async function getProfileNoCache(
-  userId: string,
+  userId: string
 ): Promise<DatabaseResult<Profile>> {
   try {
     console.log(
-      `Fetching profile from database (no cache) for userId: ${userId}`,
+      `Fetching profile from database (no cache) for userId: ${userId}`
     );
     const turso = getTursoClient();
 
@@ -147,7 +151,7 @@ export async function getProfileNoCache(
 
     try {
       result = await turso.execute({
-        sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at FROM profiles WHERE id = ?",
+        sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at, last_edit, email_sent FROM profiles WHERE id = ?",
         args: [userId],
       });
     } catch (error) {
@@ -177,6 +181,8 @@ export async function getProfileNoCache(
       avatar_url: (row as any).avatar_url || null,
       banner_url: (row as any).banner_url || null,
       created_at: row.created_at as string,
+      last_edit: (row as any).last_edit || null,
+      email_sent: (row as any).email_sent || "No",
     };
 
     return {
@@ -199,7 +205,7 @@ export async function getProfileNoCache(
  * Get user profile by slug with caching
  */
 export async function getProfileBySlug(
-  slug: string,
+  slug: string
 ): Promise<DatabaseResult<Profile>> {
   try {
     const normalizedSlug = slug.toLowerCase().trim();
@@ -210,12 +216,12 @@ export async function getProfileBySlug(
     console.log(`🔍 Checking cache for key: ${cacheKey}`);
     const cachedData = cacheManager.get<Profile>(
       CACHE_OPERATIONS.GET_PROFILE_BY_SLUG,
-      { slug: normalizedSlug },
+      { slug: normalizedSlug }
     );
 
     if (cachedData) {
       console.log(
-        `✅ Cache HIT - Returning cached profile for slug: ${normalizedSlug}`,
+        `✅ Cache HIT - Returning cached profile for slug: ${normalizedSlug}`
       );
 
       return {
@@ -229,7 +235,7 @@ export async function getProfileBySlug(
 
     // Cache miss - fetch from database
     console.log(
-      `Cache miss - fetching profile from database for slug: ${normalizedSlug}`,
+      `Cache miss - fetching profile from database for slug: ${normalizedSlug}`
     );
     const turso = getTursoClient();
 
@@ -248,7 +254,7 @@ export async function getProfileBySlug(
       cacheManager.set(
         CACHE_OPERATIONS.GET_PROFILE_BY_SLUG,
         { slug: normalizedSlug },
-        null,
+        null
       );
 
       return {
@@ -268,13 +274,15 @@ export async function getProfileBySlug(
       avatar_url: row.avatar_url as string | null,
       banner_url: row.banner_url as string | null,
       created_at: row.created_at as string,
+      last_edit: row.last_edit as string | null,
+      email_sent: row.email_sent as string,
     };
 
     // Cache the result
     cacheManager.set(
       CACHE_OPERATIONS.GET_PROFILE_BY_SLUG,
       { slug: normalizedSlug },
-      profile,
+      profile
     );
 
     return {
@@ -297,13 +305,13 @@ export async function getProfileBySlug(
  * Get user profile by slug WITHOUT caching (for real-time updates)
  */
 export async function getProfileBySlugNoCache(
-  slug: string,
+  slug: string
 ): Promise<DatabaseResult<Profile>> {
   try {
     const normalizedSlug = slug.toLowerCase().trim();
 
     console.log(
-      `Fetching profile from database (no cache) for slug: ${normalizedSlug}`,
+      `Fetching profile from database (no cache) for slug: ${normalizedSlug}`
     );
     const turso = getTursoClient();
 
@@ -335,6 +343,8 @@ export async function getProfileBySlugNoCache(
       avatar_url: row.avatar_url as string | null,
       banner_url: row.banner_url as string | null,
       created_at: row.created_at as string,
+      last_edit: row.last_edit as string | null,
+      email_sent: row.email_sent as string,
     };
 
     return {
@@ -357,7 +367,7 @@ export async function getProfileBySlugNoCache(
  * Check if username is available with caching
  */
 export async function checkUsername(
-  username: string,
+  username: string
 ): Promise<DatabaseResult<boolean>> {
   try {
     const normalizedUsername = username.toLowerCase().trim();
@@ -365,7 +375,7 @@ export async function checkUsername(
     // Check cache first
     const cachedData = cacheManager.get<boolean>(
       CACHE_OPERATIONS.CHECK_USERNAME,
-      { username: normalizedUsername },
+      { username: normalizedUsername }
     );
 
     if (cachedData !== null) {
@@ -380,7 +390,7 @@ export async function checkUsername(
 
     // Cache miss - check database
     console.log(
-      `Cache miss - checking username availability in database for: ${normalizedUsername}`,
+      `Cache miss - checking username availability in database for: ${normalizedUsername}`
     );
     const turso = getTursoClient();
 
@@ -395,7 +405,7 @@ export async function checkUsername(
     cacheManager.set(
       CACHE_OPERATIONS.CHECK_USERNAME,
       { username: normalizedUsername },
-      isAvailable,
+      isAvailable
     );
 
     return {
@@ -420,11 +430,13 @@ export async function checkUsername(
 export async function updateProfile(
   userId: string,
   updates: {
+    username?: string | null;
     display_name?: string | null;
     bio?: string | null;
     avatar_url?: string | null;
     banner_url?: string | null;
-  },
+    last_edit?: string | null;
+  }
 ): Promise<DatabaseResult<Profile>> {
   try {
     const turso = getTursoClient();
@@ -433,19 +445,36 @@ export async function updateProfile(
     const updateFields: string[] = [];
     const values: any[] = [];
 
+    if (updates.username !== undefined) {
+      updateFields.push("username = ?");
+      values.push(
+        updates.username && updates.username.trim() !== ""
+          ? updates.username.trim().toLowerCase()
+          : null
+      );
+
+      // Also update slug to match username
+      updateFields.push("slug = ?");
+      values.push(
+        updates.username && updates.username.trim() !== ""
+          ? updates.username.trim().toLowerCase()
+          : null
+      );
+    }
+
     if (updates.display_name !== undefined) {
       updateFields.push("display_name = ?");
       values.push(
         updates.display_name && updates.display_name.trim() !== ""
           ? updates.display_name.trim()
-          : null,
+          : null
       );
     }
 
     if (updates.bio !== undefined) {
       updateFields.push("bio = ?");
       values.push(
-        updates.bio && updates.bio.trim() !== "" ? updates.bio.trim() : null,
+        updates.bio && updates.bio.trim() !== "" ? updates.bio.trim() : null
       );
     }
 
@@ -454,7 +483,7 @@ export async function updateProfile(
       values.push(
         updates.avatar_url && updates.avatar_url.trim() !== ""
           ? updates.avatar_url.trim()
-          : null,
+          : null
       );
     }
 
@@ -463,8 +492,13 @@ export async function updateProfile(
       values.push(
         updates.banner_url && updates.banner_url.trim() !== ""
           ? updates.banner_url.trim()
-          : null,
+          : null
       );
+    }
+
+    if (updates.last_edit !== undefined) {
+      updateFields.push("last_edit = ?");
+      values.push(updates.last_edit);
     }
 
     if (updateFields.length === 0) {
@@ -489,7 +523,7 @@ export async function updateProfile(
 
     // Fetch updated profile directly from database (no cache)
     const result = await turso.execute({
-      sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at FROM profiles WHERE id = ?",
+      sql: "SELECT id, username, slug, display_name, bio, avatar_url, banner_url, created_at, last_edit, email_sent FROM profiles WHERE id = ?",
       args: [userId],
     });
 
@@ -511,6 +545,8 @@ export async function updateProfile(
       avatar_url: row.avatar_url as string | null,
       banner_url: row.banner_url as string | null,
       created_at: row.created_at as string,
+      last_edit: row.last_edit as string | null,
+      email_sent: (row as any).email_sent || "No",
     };
 
     console.log("Profile updated successfully:", profile);
@@ -548,7 +584,7 @@ export async function updateProfile(
  */
 export async function createUsername(
   userId: string,
-  username: string,
+  username: string
 ): Promise<DatabaseResult<{ username: string; slug: string }>> {
   try {
     const normalizedUsername = username.toLowerCase().trim();

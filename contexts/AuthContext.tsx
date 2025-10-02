@@ -167,12 +167,307 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } else {
             // Non-authentication error - could be "profile not found" which is valid for new users
+            // Try to auto-create profile if it doesn't exist
+            if (
+              error.message.includes("not found") ||
+              error.message.includes("No profile found")
+            ) {
+              try {
+                console.log(
+                  "Profile not found, attempting to auto-create profile"
+                );
+
+                // Get current session token for API authentication
+                const {
+                  data: { session },
+                } = await supabase.auth.getSession();
+                const token = session?.access_token;
+
+                if (!token) {
+                  console.error(
+                    "No session token available for profile creation"
+                  );
+                  setProfile(null);
+                  setProfileError("Authentication token not available");
+                  return;
+                }
+
+                const response = await fetch("/api/auto-create-profile", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+
+                if (response.ok) {
+                  const result = await response.json();
+                  console.log("Auto-create profile API response:", result);
+                  if (result.success && !result.data.profileExists) {
+                    // Profile was created, try to load it again
+                    console.log(
+                      "Profile auto-created successfully, reloading..."
+                    );
+                    const { data: newProfileData, error: newProfileError } =
+                      await getUserProfile(userId);
+                    if (!newProfileError && newProfileData) {
+                      setProfile(newProfileData);
+                      setProfileError(null);
+
+                      // Send welcome email for new users (one-time only) with retry logic
+                      const sendWelcomeEmailWithRetry = async (
+                        retryCount = 0
+                      ) => {
+                        try {
+                          console.log(
+                            `📧 Attempting to send welcome email (attempt ${retryCount + 1})...`
+                          );
+                          const emailResponse = await fetch(
+                            "/api/send-profile-completion-email",
+                            {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                            }
+                          );
+
+                          const emailResult = await emailResponse.json();
+
+                          if (emailResponse.ok && emailResult.success) {
+                            console.log(
+                              "✅ Welcome email sent successfully:",
+                              emailResult
+                            );
+                            return true;
+                          } else {
+                            console.error(
+                              "❌ Welcome email failed:",
+                              emailResult
+                            );
+
+                            // Retry if it's a retryable error and we haven't exceeded max retries
+                            if (emailResult.retryable && retryCount < 2) {
+                              console.log(
+                                `🔄 Retrying welcome email in 3 seconds... (attempt ${retryCount + 2})`
+                              );
+                              await new Promise((resolve) =>
+                                setTimeout(resolve, 3000)
+                              );
+                              return await sendWelcomeEmailWithRetry(
+                                retryCount + 1
+                              );
+                            } else {
+                              console.log(
+                                "💡 To fix email issues, check your SMTP configuration in .env.local"
+                              );
+                              console.log(
+                                "💡 You can also manually resend the welcome email from the dashboard"
+                              );
+                              return false;
+                            }
+                          }
+                        } catch (emailError) {
+                          console.error(
+                            "❌ Failed to send welcome email:",
+                            emailError
+                          );
+
+                          // Retry on network errors
+                          if (retryCount < 2) {
+                            console.log(
+                              `🔄 Retrying welcome email in 3 seconds... (attempt ${retryCount + 2})`
+                            );
+                            await new Promise((resolve) =>
+                              setTimeout(resolve, 3000)
+                            );
+                            return await sendWelcomeEmailWithRetry(
+                              retryCount + 1
+                            );
+                          } else {
+                            console.log(
+                              "💡 To fix email issues, check your SMTP configuration in .env.local"
+                            );
+                            console.log(
+                              "💡 You can also manually resend the welcome email from the dashboard"
+                            );
+                            return false;
+                          }
+                        }
+                      };
+
+                      await sendWelcomeEmailWithRetry();
+
+                      return;
+                    }
+                  }
+                } else {
+                  const errorData = await response.json().catch(() => ({}));
+                  console.error("Auto-create profile API failed:", {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorData,
+                  });
+                  setProfile(null);
+                  setProfileError(
+                    `Profile creation failed: ${response.status} ${response.statusText}`
+                  );
+                }
+              } catch (autoCreateError) {
+                console.error(
+                  "Failed to auto-create profile:",
+                  autoCreateError
+                );
+                setProfile(null);
+                setProfileError("Profile creation failed");
+              }
+            }
+
             setProfile(null);
             setProfileError(error.message);
           }
-        } else {
+        } else if (data) {
           setProfile(data);
           setProfileError(null);
+        } else {
+          // No error but also no data - this means profile doesn't exist
+          console.log(
+            "No profile found for user, attempting to auto-create profile"
+          );
+
+          try {
+            // Get current session token for API authentication
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) {
+              console.error("No session token available for profile creation");
+              setProfile(null);
+              setProfileError("Authentication token not available");
+              return;
+            }
+
+            const response = await fetch("/api/auto-create-profile", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log("Auto-create profile API response:", result);
+              if (result.success && !result.data.profileExists) {
+                // Profile was created, try to load it again
+                console.log("Profile auto-created successfully, reloading...");
+                const { data: newProfileData, error: newProfileError } =
+                  await getUserProfile(userId);
+                if (!newProfileError && newProfileData) {
+                  setProfile(newProfileData);
+                  setProfileError(null);
+
+                  // Send welcome email for new users (one-time only) with retry logic
+                  const sendWelcomeEmailWithRetry = async (retryCount = 0) => {
+                    try {
+                      console.log(
+                        `📧 Attempting to send welcome email (attempt ${retryCount + 1})...`
+                      );
+                      const emailResponse = await fetch(
+                        "/api/send-profile-completion-email",
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                        }
+                      );
+
+                      const emailResult = await emailResponse.json();
+
+                      if (emailResponse.ok && emailResult.success) {
+                        console.log(
+                          "✅ Welcome email sent successfully:",
+                          emailResult
+                        );
+                        return true;
+                      } else {
+                        console.error("❌ Welcome email failed:", emailResult);
+
+                        // Retry if it's a retryable error and we haven't exceeded max retries
+                        if (emailResult.retryable && retryCount < 2) {
+                          console.log(
+                            `🔄 Retrying welcome email in 3 seconds... (attempt ${retryCount + 2})`
+                          );
+                          await new Promise((resolve) =>
+                            setTimeout(resolve, 3000)
+                          );
+                          return await sendWelcomeEmailWithRetry(
+                            retryCount + 1
+                          );
+                        } else {
+                          console.log(
+                            "💡 To fix email issues, check your SMTP configuration in .env.local"
+                          );
+                          console.log(
+                            "💡 You can also manually resend the welcome email from the dashboard"
+                          );
+                          return false;
+                        }
+                      }
+                    } catch (emailError) {
+                      console.error(
+                        "❌ Failed to send welcome email:",
+                        emailError
+                      );
+
+                      // Retry on network errors
+                      if (retryCount < 2) {
+                        console.log(
+                          `🔄 Retrying welcome email in 3 seconds... (attempt ${retryCount + 2})`
+                        );
+                        await new Promise((resolve) =>
+                          setTimeout(resolve, 3000)
+                        );
+                        return await sendWelcomeEmailWithRetry(retryCount + 1);
+                      } else {
+                        console.log(
+                          "💡 To fix email issues, check your SMTP configuration in .env.local"
+                        );
+                        console.log(
+                          "💡 You can also manually resend the welcome email from the dashboard"
+                        );
+                        return false;
+                      }
+                    }
+                  };
+
+                  await sendWelcomeEmailWithRetry();
+
+                  return;
+                }
+              }
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              console.error("Auto-create profile API failed:", {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorData,
+              });
+              setProfile(null);
+              setProfileError(
+                `Profile creation failed: ${response.status} ${response.statusText}`
+              );
+            }
+          } catch (autoCreateError) {
+            console.error("Failed to auto-create profile:", autoCreateError);
+            setProfile(null);
+            setProfileError("Profile creation failed");
+          }
         }
       } catch (error) {
         console.error("Error loading user profile:", error);

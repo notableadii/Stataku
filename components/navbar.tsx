@@ -151,6 +151,14 @@ export const Navbar = () => {
             <>
               {user && profile ? (
                 <UserProfileDropdown />
+              ) : user ? (
+                <Button
+                  className="text-sm font-normal text-warning-600 bg-warning-100"
+                  onPress={() => window.location.reload()}
+                  variant="flat"
+                >
+                  Profile Loading...
+                </Button>
               ) : (
                 <Button
                   as={Link}
@@ -225,6 +233,17 @@ export const Navbar = () => {
                     <div className="w-full">
                       <UserProfileDropdown className="w-full" isMobile={true} />
                     </div>
+                  </NavbarMenuItem>
+                ) : user ? (
+                  <NavbarMenuItem>
+                    <Button
+                      className="w-full text-warning-600 bg-warning-100"
+                      onPress={() => window.location.reload()}
+                      size="lg"
+                      variant="flat"
+                    >
+                      Profile Loading...
+                    </Button>
                   </NavbarMenuItem>
                 ) : (
                   <NavbarMenuItem>

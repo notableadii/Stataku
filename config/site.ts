@@ -67,6 +67,6 @@ export const siteConfig = {
     discord: "https://discord.gg/9b6yyZKmH4",
     signin: "/signin",
     signup: "/signup",
-    createUsername: "/create-username",
+    dashboard: "/dashboard",
   },
 };

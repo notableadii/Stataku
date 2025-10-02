@@ -11,6 +11,8 @@ export interface UserProfile {
   avatar_url: string | null;
   banner_url: string | null;
   created_at: string;
+  last_edit: string | null;
+  email_sent: string;
 }
 
 // Username functions
@@ -380,10 +382,12 @@ export const updateUserProfile = async (
       },
       body: JSON.stringify({
         userId,
+        username: updates.username,
         display_name: updates.display_name,
         bio: updates.bio,
         avatar_url: updates.avatar_url,
         banner_url: updates.banner_url,
+        last_edit: updates.last_edit,
       }),
     });
 

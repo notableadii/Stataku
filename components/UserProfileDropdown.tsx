@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dropdown,
   DropdownTrigger,
@@ -40,6 +40,47 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+
+  // Listen for localStorage changes to get current username
+  useEffect(() => {
+    const getCurrentUsername = () => {
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("currentUsername");
+        setCurrentUsername(stored);
+      }
+    };
+
+    // Get initial value
+    getCurrentUsername();
+
+    // Listen for storage events (when localStorage changes from other tabs/components)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "currentUsername") {
+        setCurrentUsername(e.newValue);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also listen for custom events (for same-tab changes)
+    const handleCustomStorageChange = () => {
+      getCurrentUsername();
+    };
+
+    window.addEventListener(
+      "currentUsernameChanged",
+      handleCustomStorageChange
+    );
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "currentUsernameChanged",
+        handleCustomStorageChange
+      );
+    };
+  }, []);
 
   if (!user || !profile) {
     return null;
@@ -59,7 +100,9 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   };
 
   const handleProfileClick = () => {
-    router.push(`/user/${profile.username}`);
+    // Use current username if available (when typing), otherwise use saved username
+    const usernameToUse = currentUsername || profile.username;
+    router.push(`/user/${usernameToUse}`);
   };
 
   const handleSettingsClick = () => {
@@ -109,7 +152,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                 src={getAvatarSrc()}
               />
               <span className="text-sm font-medium text-foreground">
-                {profile.username}
+                {currentUsername || profile.username}
               </span>
             </div>
           </DropdownTrigger>

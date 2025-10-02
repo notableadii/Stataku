@@ -8,7 +8,7 @@ function getTursoClient() {
 
   if (!url || !authToken) {
     throw new Error(
-      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.",
+      "Turso database configuration is missing. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables."
     );
   }
 
@@ -87,6 +87,28 @@ export async function POST() {
       `);
     }
 
+    // Check if last_edit column exists, if not add it
+    try {
+      await turso.execute(`SELECT last_edit FROM profiles LIMIT 1`);
+      console.log("Last_edit column already exists");
+    } catch (error) {
+      console.log("Adding last_edit column to profiles table");
+      await turso.execute(`
+        ALTER TABLE profiles ADD COLUMN last_edit DATETIME
+      `);
+    }
+
+    // Check if email_sent column exists, if not add it
+    try {
+      await turso.execute(`SELECT email_sent FROM profiles LIMIT 1`);
+      console.log("Email_sent column already exists");
+    } catch (error) {
+      console.log("Adding email_sent column to profiles table");
+      await turso.execute(`
+        ALTER TABLE profiles ADD COLUMN email_sent TEXT DEFAULT 'No'
+      `);
+    }
+
     // Update existing profiles to have slug values (migration)
     try {
       await turso.execute(`
@@ -126,7 +148,7 @@ export async function POST() {
 
     return NextResponse.json(
       { error: "Failed to initialize database schema" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

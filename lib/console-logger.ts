@@ -149,6 +149,7 @@ export const PAGE_MESSAGES = {
   "Auth Code Error": "Authentication error occurred. Please try again! ❌",
   "Confirm Email": "Confirming your email address... ✅",
   "Profile Page": "Viewing user profile and their amazing content! 👀",
+  "Test Email": "Testing email functionality and templates! 📧",
   "Not Found": "Oops! The page you're looking for doesn't exist! 🔍",
   Error: "Something went wrong, but we're on it! 🚨",
 } as const;

@@ -8,7 +8,8 @@ import { Divider } from "@heroui/divider";
 import { Tooltip } from "@heroui/tooltip";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { CameraIcon } from "@heroicons/react/24/outline";
+import { CameraIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
+import { usernameChecker } from "@/lib/username-cache";
 
 import { ProfilePageSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ export default function ProfileSettingsPage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [formInitialized, setFormInitialized] = useState(false);
 
+  const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -41,12 +43,26 @@ export default function ProfileSettingsPage() {
   const [showAvatarTooltip, setShowAvatarTooltip] = useState(false);
   const [showBannerTooltip, setShowBannerTooltip] = useState(false);
 
+  // Username validation state
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
+    null
+  );
+  const [usernameLoading, setUsernameLoading] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+
   const avatarUrlInputRef = useRef<HTMLInputElement>(null);
   const bannerUrlInputRef = useRef<HTMLInputElement>(null);
 
   // Log page visit with beautiful console message
   useEffect(() => {
     logPageVisit("Profile Settings", PAGE_MESSAGES["Profile Settings"]);
+
+    // Cleanup: clear current username from localStorage when component unmounts
+    return () => {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("currentUsername");
+      }
+    };
   }, []);
 
   // Fetch profile data directly from database (no cache) when component mounts
@@ -94,6 +110,7 @@ export default function ProfileSettingsPage() {
     if (localProfile && !formInitialized) {
       console.log("📝 Initializing form fields with fresh profile data");
 
+      setUsername(localProfile.username || "");
       setDisplayName(localProfile.display_name || "");
       setBio(localProfile.bio || "");
       setAvatarUrl(localProfile.avatar_url || "");
@@ -104,9 +121,113 @@ export default function ProfileSettingsPage() {
     }
   }, [localProfile, formInitialized]);
 
+  // Username validation function
+  const validateUsername = (value: string) => {
+    const trimmedValue = value.trim();
+
+    // Reset validation state
+    setUsernameError(null);
+    setUsernameAvailable(null);
+    setUsernameLoading(false);
+
+    if (!trimmedValue) {
+      return;
+    }
+
+    // Check if username is different from current profile username
+    if (localProfile && trimmedValue === localProfile.username) {
+      setUsernameAvailable(true);
+      return;
+    }
+
+    // Check format first
+    const usernameRegex = /^[a-z0-9_.]{3,30}$/;
+    if (!usernameRegex.test(trimmedValue)) {
+      setUsernameError(
+        "Username must be 3-30 characters and contain only lowercase letters, numbers, underscores, and periods."
+      );
+      setUsernameAvailable(false);
+      return;
+    }
+
+    // Start real-time checking
+    setUsernameLoading(true);
+    usernameChecker.checkUsernameAvailability(
+      trimmedValue,
+      (checkedUsername, available, loading) => {
+        if (checkedUsername === trimmedValue) {
+          setUsernameLoading(loading);
+          if (!loading) {
+            if (available === null) {
+              setUsernameError("Failed to check username availability");
+              setUsernameAvailable(false);
+            } else if (available === false) {
+              setUsernameError("Username is already taken");
+              setUsernameAvailable(false);
+            } else {
+              setUsernameError(null);
+              setUsernameAvailable(true);
+            }
+          }
+        }
+      }
+    );
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Filter out any characters that are not lowercase letters, numbers, underscores, or periods
+    const filteredValue = value.replace(/[^a-z0-9_.]/g, "");
+
+    setUsername(filteredValue);
+    validateUsername(filteredValue);
+
+    // Store current username in localStorage for global access
+    if (typeof window !== "undefined") {
+      if (filteredValue.trim()) {
+        localStorage.setItem("currentUsername", filteredValue.trim());
+      } else {
+        localStorage.removeItem("currentUsername");
+      }
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent("currentUsernameChanged"));
+    }
+  };
+
+  const handleCopyProfileUrl = async () => {
+    const currentUsername = username.trim() || localProfile?.username;
+    const profileUrl = `${window.location.origin}/user/${currentUsername}`;
+
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+      setMessage({
+        type: "success",
+        text: "Profile URL copied to clipboard!",
+      });
+    } catch (error) {
+      console.error("Failed to copy URL:", error);
+      setMessage({
+        type: "error",
+        text: "Failed to copy URL to clipboard",
+      });
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setMessage(null);
+
+    // Validate username before saving
+    if (username.trim() && usernameAvailable !== true) {
+      setMessage({
+        type: "error",
+        text: "Please fix username validation errors before saving",
+      });
+      setSaving(false);
+      return;
+    }
 
     try {
       if (!user) {
@@ -114,10 +235,12 @@ export default function ProfileSettingsPage() {
       }
 
       const { data: _data, error } = await updateUserProfile(user.id, {
+        username: username.trim() || undefined,
         display_name: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         banner_url: bannerUrl.trim() || undefined,
+        last_edit: new Date().toISOString(), // Set last_edit timestamp
       });
 
       if (error) {
@@ -126,8 +249,41 @@ export default function ProfileSettingsPage() {
 
       setMessage({ type: "success", text: "Profile updated successfully!" });
 
-      // Refresh profile in auth context
-      await forceRefreshProfile();
+      // Clear current username from localStorage after saving
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("currentUsername");
+      }
+
+      // If username changed, invalidate cache and refresh profile
+      if (username.trim() !== localProfile?.username) {
+        console.log(
+          "🔄 Username changed, invalidating cache and refreshing profile"
+        );
+
+        // Invalidate cache for the old username/slug
+        if (localProfile?.username) {
+          // Clear cache for old profile
+          const cacheKey = `profile-${localProfile.username}`;
+          // Note: Cache invalidation is handled by the API, but we can force refresh
+        }
+
+        // Force refresh profile in auth context (this will do a fresh database read)
+        await forceRefreshProfile();
+
+        // Update local profile state with new data
+        const freshProfile = await getUserProfileNoCache(user.id);
+        if (freshProfile.data) {
+          setLocalProfile(freshProfile.data as UserProfile);
+
+          // Reset username validation state since profile was refreshed
+          setUsernameAvailable(null);
+          setUsernameLoading(false);
+          setUsernameError(null);
+        }
+      } else {
+        // Just refresh profile normally
+        await forceRefreshProfile();
+      }
 
       // Force refresh Next.js router cache
       router.refresh();
@@ -166,17 +322,20 @@ export default function ProfileSettingsPage() {
     if (!localProfile) return false;
 
     // Normalize empty strings to null for comparison
+    const currentUsername = username.trim() || null;
     const currentDisplayName = displayName.trim() || null;
     const currentBio = bio.trim() || null;
     const currentAvatarUrl = avatarUrl.trim() || null;
     const currentBannerUrl = bannerUrl.trim() || null;
 
+    const profileUsername = localProfile.username?.trim() || null;
     const profileDisplayName = localProfile.display_name?.trim() || null;
     const profileBio = localProfile.bio?.trim() || null;
     const profileAvatarUrl = localProfile.avatar_url?.trim() || null;
     const profileBannerUrl = localProfile.banner_url?.trim() || null;
 
     return (
+      currentUsername !== profileUsername ||
       currentDisplayName !== profileDisplayName ||
       currentBio !== profileBio ||
       currentAvatarUrl !== profileAvatarUrl ||
@@ -373,6 +532,67 @@ export default function ProfileSettingsPage() {
 
           {/* Form Fields */}
           <div className="space-y-4 xs:space-y-8">
+            {/* Username */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  className="text-sm font-semibold text-foreground"
+                  htmlFor="username"
+                >
+                  Username
+                </label>
+                <span className="text-xs text-default-400">
+                  {username.length}/30
+                </span>
+              </div>
+              <Input
+                classNames={{
+                  input: "text-sm xs:text-base",
+                  inputWrapper: "h-11 xs:h-12",
+                }}
+                id="username"
+                maxLength={30}
+                placeholder="Enter your username"
+                value={username}
+                onChange={handleUsernameChange}
+                color={
+                  usernameError
+                    ? "danger"
+                    : usernameAvailable === true
+                      ? "success"
+                      : usernameLoading
+                        ? "warning"
+                        : "default"
+                }
+                variant={usernameError ? "bordered" : "flat"}
+                endContent={
+                  usernameLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : usernameAvailable === true ? (
+                    <span className="text-success text-lg">✓</span>
+                  ) : usernameError ? (
+                    <span className="text-danger text-lg">✗</span>
+                  ) : null
+                }
+              />
+              {usernameError && (
+                <p className="text-xs text-danger mt-1.5">{usernameError}</p>
+              )}
+              {!usernameError && usernameAvailable === true && (
+                <p className="text-xs text-success mt-1.5">
+                  Username is available
+                </p>
+              )}
+              {!usernameError &&
+                usernameAvailable === null &&
+                username.trim() && (
+                  <p className="text-xs text-default-400 mt-1.5">
+                    Username must be 3-30 characters and contain only lowercase
+                    letters, numbers, underscores, and periods
+                  </p>
+                )}
+            </div>
+
             {/* Display Name */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -520,7 +740,11 @@ export default function ProfileSettingsPage() {
               className="w-full sm:w-auto"
               size="lg"
               variant="flat"
-              onPress={() => router.push(`/user/${localProfile?.username}`)}
+              onPress={() =>
+                router.push(
+                  `/user/${username.trim() || localProfile?.username}`
+                )
+              }
             >
               Cancel
             </Button>
@@ -537,17 +761,37 @@ export default function ProfileSettingsPage() {
           </div>
 
           {/* Footer Info */}
-          <div className="mt-6 xs:mt-12 pt-4 xs:pt-8 border-t border-divider">
+          <div className="mt-6 xs:mt-12 pt-4 xs:pt-8 pb-8 xs:pb-12 border-t border-divider">
             <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-4">
               <p className="text-sm xs:text-base font-medium text-default-600">
                 Profile URL
               </p>
-              <a
-                className="text-primary hover:underline text-sm xs:text-base truncate font-mono"
-                href={`/user/${localProfile?.username}`}
-              >
-                /{localProfile?.username}
-              </a>
+              <div className="flex items-center gap-2">
+                <button
+                  className={`text-sm xs:text-base truncate font-mono text-left ${
+                    username.trim() !== localProfile?.username
+                      ? "text-warning hover:underline"
+                      : "text-primary hover:underline"
+                  }`}
+                  onClick={() =>
+                    router.push(
+                      `/user/${username.trim() || localProfile?.username}`
+                    )
+                  }
+                >
+                  /{username.trim() || localProfile?.username}
+                  {username.trim() !== localProfile?.username && (
+                    <span className="ml-1 text-xs text-warning">(unsaved)</span>
+                  )}
+                </button>
+                <button
+                  className="text-default-400 hover:text-primary transition-colors p-1"
+                  onClick={handleCopyProfileUrl}
+                  title="Copy profile URL"
+                >
+                  <ClipboardDocumentIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

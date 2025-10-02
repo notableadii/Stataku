@@ -21,7 +21,7 @@ export const POST = withPublicSecurity(async (request: NextRequest) => {
           error: "Username is required and must be a string",
           available: false,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -33,7 +33,7 @@ export const POST = withPublicSecurity(async (request: NextRequest) => {
         available: false,
         username: normalizedUsername,
         error:
-          "Invalid username format. Username must be 3-30 characters and contain only letters, numbers, dots, hyphens, and underscores.",
+          "Invalid username format. Username must be 3-30 characters and contain only lowercase letters, numbers, underscores, and periods.",
       });
     }
 
@@ -98,7 +98,7 @@ export const POST = withPublicSecurity(async (request: NextRequest) => {
     // Check if database is configured
     if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
       console.warn(
-        "Database not configured, using mock data for username checking",
+        "Database not configured, using mock data for username checking"
       );
 
       // Mock some usernames as taken for testing
@@ -197,7 +197,7 @@ export const POST = withPublicSecurity(async (request: NextRequest) => {
           error: "Internal server error",
           available: false,
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }
