@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function Error({
   error,
@@ -16,6 +17,9 @@ export default function Error({
   const router = useRouter();
 
   useEffect(() => {
+    // Log page visit with beautiful console message
+    logPageVisit("Error", PAGE_MESSAGES.Error);
+
     // Log the error to an error reporting service
     console.error("Error caught:", error);
   }, [error]);

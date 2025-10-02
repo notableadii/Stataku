@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function GlobalError({
   error: _error,
@@ -11,6 +13,11 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Error", PAGE_MESSAGES.Error);
+  }, []);
+
   return (
     <html lang="en">
       <head>

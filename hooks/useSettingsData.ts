@@ -49,7 +49,7 @@ export function useSettingsData(): UseSettingsDataReturn {
         const cached = settingsCache.get(cacheKey);
 
         if (cached && now - cached.timestamp < CACHE_DURATION) {
-          console.log("Using cached settings data for user:", user.id);
+          // Using cached settings data
           setSettingsData(cached.data);
           setLoading(false);
           setError(null);
@@ -61,9 +61,7 @@ export function useSettingsData(): UseSettingsDataReturn {
 
       // Debounce: only fetch if it's been more than 2 seconds since last fetch
       if (now - lastFetchRef.current < 2000) {
-        console.log(
-          "Settings data fetch debounced - too soon since last fetch"
-        );
+        // Settings data fetch debounced - too soon since last fetch
 
         return;
       }
@@ -73,7 +71,7 @@ export function useSettingsData(): UseSettingsDataReturn {
       setError(null);
 
       try {
-        console.log("Fetching settings data for user:", user.id);
+        // Fetching settings data
 
         // Get the current session token for authentication
         const {
@@ -114,24 +112,7 @@ export function useSettingsData(): UseSettingsDataReturn {
         // Get user data to check for password authentication
         const { data: userData } = await supabase.auth.getUser();
 
-        // Debug logging to understand the user object structure
-        console.log("=== DEBUGGING USER OBJECT ===");
-        console.log(
-          "Full user object:",
-          JSON.stringify(userData?.user, null, 2)
-        );
-        console.log(
-          "Identities:",
-          JSON.stringify(identitiesResponse.data?.identities, null, 2)
-        );
-        console.log(
-          "User app_metadata:",
-          JSON.stringify(userData?.user?.app_metadata, null, 2)
-        );
-        console.log(
-          "User user_metadata:",
-          JSON.stringify(userData?.user?.user_metadata, null, 2)
-        );
+        // User authentication data retrieved
 
         const hasEmailIdentity = identitiesResponse.data?.identities?.some(
           (identity: any) => identity.provider === "email"
@@ -149,18 +130,7 @@ export function useSettingsData(): UseSettingsDataReturn {
           userData?.user?.app_metadata?.providers?.length || 0;
         const identityCount = identitiesResponse.data?.identities?.length || 0;
 
-        console.log("hasEmailIdentity:", hasEmailIdentity);
-        console.log("hasEmailInProviders:", hasEmailInProviders);
-        console.log("hasConfirmedEmail:", hasConfirmedEmail);
-        console.log("hasEmail:", hasEmail);
-        console.log("providerCount:", providerCount);
-        console.log("identityCount:", identityCount);
-        console.log("User email:", userData?.user?.email);
-        console.log(
-          "User email_confirmed_at:",
-          userData?.user?.email_confirmed_at
-        );
-        console.log("=== END DEBUG ===");
+        // Authentication method analysis completed
 
         // Determine if user has password authentication capability
         let hasPasswordAuth = false;
@@ -168,19 +138,16 @@ export function useSettingsData(): UseSettingsDataReturn {
         // Method 1: Check for email identity (traditional signup)
         if (hasEmailIdentity) {
           hasPasswordAuth = true;
-          console.log("Password auth detected via email identity");
         }
 
         // Method 2: Check app_metadata.providers for "email" (OAuth user who added password)
         else if (hasEmailInProviders) {
           hasPasswordAuth = true;
-          console.log("Password auth detected via app_metadata.providers");
         }
 
         // Method 3: Check if user has multiple authentication methods
         else if (providerCount > 1 && hasEmail && hasConfirmedEmail) {
           hasPasswordAuth = true;
-          console.log("Password auth detected via multiple providers");
         }
 
         // Method 4: Check if user has both OAuth identity AND confirmed email
@@ -196,12 +163,7 @@ export function useSettingsData(): UseSettingsDataReturn {
           )
         ) {
           hasPasswordAuth = true;
-          console.log(
-            "Password auth detected via OAuth + confirmed email combination"
-          );
         }
-
-        console.log("Final hasPasswordAuth decision:", hasPasswordAuth);
 
         // Combine profile data with identities
         const combinedData = {

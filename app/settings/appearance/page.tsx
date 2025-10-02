@@ -9,11 +9,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import SettingsNav from "@/components/SettingsNav";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { SunFilledIcon, MoonFilledIcon } from "@/components/icons";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function AppearanceSettingsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { theme } = useTheme();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Appearance Settings", PAGE_MESSAGES["Appearance Settings"]);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {

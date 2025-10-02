@@ -15,7 +15,7 @@ export interface UserProfile {
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string,
+  username: string
 ): Promise<boolean> => {
   try {
     const response = await fetch("/api/check-username", {
@@ -124,9 +124,9 @@ export const getUserProfile = async (userId: string) => {
 
     // Log cache status for debugging
     if (data.fromCache) {
-      console.log("✅ Profile data served from cache");
+      // Profile data served from cache
     } else {
-      console.log("🔄 Profile data fetched from database");
+      // Profile data fetched from database
     }
 
     return { data: data.data, error: data.error };
@@ -170,7 +170,7 @@ export const getUserProfileNoCache = async (userId: string) => {
       };
     }
 
-    console.log("🔄 Profile data fetched from database (no cache)");
+    // Profile data fetched from database (no cache)
 
     return { data: data.data, error: data.error };
   } catch (error) {
@@ -201,9 +201,9 @@ export const getUserProfileBySlug = async (slug: string) => {
 
     // Log cache status for debugging
     if (data.fromCache) {
-      console.log("✅ Profile data served from cache for slug:", slug);
+      // Profile data served from cache for slug
     } else {
-      console.log("🔄 Profile data fetched from database for slug:", slug);
+      // Profile data fetched from database for slug
     }
 
     return { data: data.data, error: data.error };
@@ -235,7 +235,7 @@ export const getUserProfileBySlugNoCache = async (slug: string) => {
 
     console.log(
       "🔄 Profile data fetched from database (no cache) for slug:",
-      slug,
+      slug
     );
 
     return { data: data.data, error: data.error };
@@ -248,7 +248,7 @@ export const getUserProfileBySlugNoCache = async (slug: string) => {
 
 export const updateUserProfile = async (
   userId: string,
-  updates: Partial<UserProfile>,
+  updates: Partial<UserProfile>
 ) => {
   try {
     // Get the current session token for authentication

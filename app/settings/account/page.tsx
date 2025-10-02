@@ -14,11 +14,17 @@ import { supabase } from "@/lib/supabase";
 import { GoogleIcon, DiscordIcon } from "@/components/icons";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import SettingsNav from "@/components/SettingsNav";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function AccountSettingsPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Account Settings", PAGE_MESSAGES["Account Settings"]);
+  }, []);
 
   // Use optimized settings data hook
   const {

@@ -3,10 +3,16 @@
 import { addToast } from "@heroui/toast";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export function HomeClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Home", PAGE_MESSAGES.Home);
+  }, []);
 
   // Handle URL error parameters
   useEffect(() => {

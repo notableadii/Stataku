@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function EmailConfirmationPage() {
   const searchParams = useSearchParams();
@@ -20,6 +21,11 @@ export default function EmailConfirmationPage() {
     "success" | "error" | "loading"
   >("loading");
   const [message, setMessage] = useState("");
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Email Confirmation", PAGE_MESSAGES["Email Confirmation"]);
+  }, []);
 
   useEffect(() => {
     const checkConfirmationStatus = () => {

@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function AuthConfirmPage() {
   const searchParams = useSearchParams();
@@ -25,6 +26,11 @@ export default function AuthConfirmPage() {
   >("loading");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Confirm Email", PAGE_MESSAGES["Confirm Email"]);
+  }, []);
 
   useEffect(() => {
     const handleAuthCallback = async () => {

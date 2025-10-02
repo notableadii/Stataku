@@ -12,6 +12,7 @@ import {
   getUserProfileBySlugNoCache,
 } from "@/lib/turso";
 import { useAuth } from "@/contexts/AuthContext";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -22,6 +23,11 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [usernameNotFound, setUsernameNotFound] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Profile Page", PAGE_MESSAGES["Profile Page"]);
+  }, []);
 
   const fetchProfile = useCallback(
     async (forceRefresh = false) => {
@@ -49,7 +55,6 @@ export default function ProfilePage() {
 
         // Ensure we have valid profile data before setting it
         if (data && data.username) {
-          console.log("Profile loaded successfully:", data);
           setProfile(data);
         } else {
           // If profile data is invalid, show custom message
@@ -99,7 +104,6 @@ export default function ProfilePage() {
   // Listen for profile updates from AuthContext
   useEffect(() => {
     if (isOwnProfile && currentUserProfile) {
-      console.log("Profile updated in AuthContext, updating display");
       setProfile(currentUserProfile);
     }
   }, [isOwnProfile, currentUserProfile]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -12,35 +12,25 @@ import { title, subtitle } from "@/components/primitives";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOut } from "@/lib/supabase";
 import { UserProfileSkeleton } from "@/components/skeletons";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 // Animation imports removed - using simple hover effects only
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
-  const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
-  const profileRef = useRef(profile);
 
-  // Update profile ref whenever profile changes
+  // Log page visit with beautiful console message
   useEffect(() => {
-    profileRef.current = profile;
-  }, [profile]);
+    logPageVisit("Dashboard", PAGE_MESSAGES.Dashboard);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/signin");
-    } else if (!loading && user && !profile && !hasCheckedProfile) {
-      // Add a delay before redirecting to create-username to allow profile to load
-      setHasCheckedProfile(true);
-      const timer = setTimeout(() => {
-        // Use ref to get the current profile state at timeout
-        if (!profileRef.current) {
-          router.push("/create-username");
-        }
-      }, 2000); // 2 second delay
-
-      return () => clearTimeout(timer);
+    } else if (!loading && user && !profile) {
+      router.push("/create-username");
     }
-  }, [user, profile, loading, router, hasCheckedProfile]);
+  }, [user, profile, loading, router]);
 
   const handleSignOut = async () => {
     await signOut();

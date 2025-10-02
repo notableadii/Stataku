@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { useRouter } from "next/navigation";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function NotFound() {
   const router = useRouter();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Not Found", PAGE_MESSAGES["Not Found"]);
+  }, []);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background z-40">

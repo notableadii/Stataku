@@ -14,6 +14,7 @@ import { ProfilePageSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserProfile, updateUserProfile } from "@/lib/turso";
 import SettingsNav from "@/components/SettingsNav";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function ProfileSettingsPage() {
   const { user, profile, loading, forceRefreshProfile } = useAuth();
@@ -33,6 +34,11 @@ export default function ProfileSettingsPage() {
 
   const avatarUrlInputRef = useRef<HTMLInputElement>(null);
   const bannerUrlInputRef = useRef<HTMLInputElement>(null);
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Profile Settings", PAGE_MESSAGES["Profile Settings"]);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -189,13 +195,6 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     if (profile) {
       const fullProfile = profile as UserProfile;
-
-      console.log("🔄 Profile data changed, updating form fields:", {
-        display_name: fullProfile.display_name,
-        bio: fullProfile.bio,
-        avatar_url: fullProfile.avatar_url,
-        banner_url: fullProfile.banner_url,
-      });
 
       setDisplayName(fullProfile.display_name || "");
       setBio(fullProfile.bio || "");

@@ -1,8 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
 import { title, subtitle } from "@/components/primitives";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function BrowsePage() {
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Browse", PAGE_MESSAGES.Browse);
+  }, []);
+
   return (
     <div className="container mx-auto max-w-7xl px-6 py-8">
       <div className="text-center mb-8">

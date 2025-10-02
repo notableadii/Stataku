@@ -16,6 +16,7 @@ import { signIn, signInWithGoogle, signInWithDiscord } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { SignInFormSkeleton } from "@/components/skeletons";
 import { EmailConfirmationDialog } from "@/components/EmailConfirmationDialog";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 // Animation imports removed - using simple hover effects only
 
 export default function SignInPage() {
@@ -28,6 +29,11 @@ export default function SignInPage() {
   const [pendingEmail, setPendingEmail] = useState("");
   const router = useRouter();
   const { user, profile, loading } = useAuth();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Sign In", PAGE_MESSAGES["Sign In"]);
+  }, []);
 
   // Redirect if user is already signed in
   useEffect(() => {
@@ -84,9 +90,10 @@ export default function SignInPage() {
           return;
         }
 
-        // Email confirmed, wait for profile to load then redirect
-        // Don't redirect immediately - let AuthContext handle the profile loading
-        router.push("/dashboard");
+        // Email confirmed, add small delay to allow profile to load
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1000);
       }
     } catch (_err) {
       setError("An unexpected error occurred");
@@ -121,8 +128,10 @@ export default function SignInPage() {
 
   const handleEmailConfirmed = () => {
     setShowEmailConfirmation(false);
-    // Let AuthContext handle profile loading and redirect logic
-    router.push("/dashboard");
+    // Add small delay to allow profile to load
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 1000);
   };
 
   if (showSkeleton) {

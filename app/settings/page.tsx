@@ -2,9 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function SettingsPage() {
   const router = useRouter();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Settings", PAGE_MESSAGES.Settings);
+  }, []);
 
   useEffect(() => {
     // Redirect to profile settings as the default

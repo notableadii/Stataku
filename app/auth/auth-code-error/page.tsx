@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { useRouter } from "next/navigation";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function AuthCodeErrorPage() {
   const router = useRouter();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Auth Code Error", PAGE_MESSAGES["Auth Code Error"]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

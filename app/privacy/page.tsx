@@ -1,14 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 
 import { title, subtitle } from "@/components/primitives";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 
 export default function PrivacyPage() {
   const router = useRouter();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Privacy Policy", PAGE_MESSAGES["Privacy Policy"]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-start justify-center bg-background -mt-10 sm:pt-3 md:pt-4 lg:pt-6 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8">

@@ -26,7 +26,7 @@ function getSupabaseClient() {
       - NEXT_PUBLIC_SUPABASE_ANON_KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "SET" : "NOT SET"}
       - SUPABASE_ANON_KEY (old): ${process.env.SUPABASE_ANON_KEY ? "SET" : "NOT SET"}
       
-      Make sure to use NEXT_PUBLIC_ prefix for client-side environment variables in Next.js.`,
+      Make sure to use NEXT_PUBLIC_ prefix for client-side environment variables in Next.js.`
     );
   }
 
@@ -108,7 +108,7 @@ export const signInWithDiscord = async () => {
 
 // Username functions
 export const checkUsernameAvailability = async (
-  username: string,
+  username: string
 ): Promise<boolean> => {
   const client = getSupabaseClient();
   const { error } = await client
@@ -158,7 +158,7 @@ export const getUserProfile = async (userId: string) => {
       };
     }
 
-    console.log("Making API request to /api/get-profile with userId:", userId);
+    // Making API request to get profile
     const response = await fetch("/api/get-profile", {
       method: "POST",
       headers: {
@@ -178,12 +178,7 @@ export const getUserProfile = async (userId: string) => {
       };
     }
 
-    // Log cache status for debugging
-    if (result.fromCache) {
-      console.log("✅ Profile data served from cache");
-    } else {
-      console.log("🔄 Profile data fetched from database");
-    }
+    // Cache status logged for debugging
 
     return { data: result.data, error: null };
   } catch (error) {
@@ -195,7 +190,7 @@ export const getUserProfile = async (userId: string) => {
 
 export const updateUserProfile = async (
   userId: string,
-  updates: Partial<UserProfile>,
+  updates: Partial<UserProfile>
 ) => {
   // Use the API route instead of direct Supabase query since we're using Turso for profiles
   try {

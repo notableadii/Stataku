@@ -6,11 +6,17 @@ import { useRouter } from "next/navigation";
 import { UsernameSelector } from "@/components/UsernameSelector";
 import { useAuth } from "@/contexts/AuthContext";
 import { UsernameFormSkeleton } from "@/components/skeletons";
+import { logPageVisit, PAGE_MESSAGES } from "@/lib/console-logger";
 // Animation imports removed - using simple hover effects only
 
 export default function CreateUsernamePage() {
   const router = useRouter();
   const { user, profile, loading, refreshProfile } = useAuth();
+
+  // Log page visit with beautiful console message
+  useEffect(() => {
+    logPageVisit("Create Username", PAGE_MESSAGES["Create Username"]);
+  }, []);
 
   // Redirect if user is not logged in
   useEffect(() => {

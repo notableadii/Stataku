@@ -52,8 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       previousUserRef.current = initialUser;
 
       if (session?.user) {
-        // Force load profile on initial session load
-        await loadUserProfile(session.user.id, true);
+        await loadUserProfile(session.user.id);
       }
 
       setLoading(false);
@@ -96,8 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       previousUserRef.current = newUser;
 
       if (session?.user) {
-        // Force load profile on auth state change (signin/signup)
-        await loadUserProfile(session.user.id, true);
+        await loadUserProfile(session.user.id);
       } else {
         setProfile(null);
       }
@@ -109,22 +107,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadUserProfile = useCallback(
-    async (userId: string, forceLoad = false) => {
+    async (userId: string) => {
       const now = Date.now();
 
-      // Debounce: only fetch if it's been more than 10 seconds since last fetch
-      // Skip debounce if forceLoad is true (for fresh authentications)
-      if (!forceLoad && now - lastProfileFetchRef.current < 10000) {
-        console.log("Profile fetch debounced - too soon since last fetch", {
-          timeSinceLastFetch: now - lastProfileFetchRef.current,
-          lastFetch: lastProfileFetchRef.current,
-          now: now,
-        });
+      // Debounce: only fetch if it's been more than 2 seconds since last fetch
+      if (now - lastProfileFetchRef.current < 2000) {
+        // Profile fetch debounced - too soon since last fetch
 
         return;
       }
 
-      console.log("Fetching user profile for userId:", userId);
+      // Fetching user profile
       try {
         lastProfileFetchRef.current = now;
         const { data, error } = await getUserProfile(userId);
@@ -133,7 +126,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error loading user profile:", error);
           setProfile(null);
         } else {
-          console.log("Profile loaded successfully:", data);
           setProfile(data);
         }
       } catch (error) {
@@ -154,14 +146,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       try {
         lastProfileFetchRef.current = 0; // Reset the debounce timer
-        console.log("Force refreshing profile (no cache) for user:", user.id);
         const { data, error } = await getUserProfileNoCache(user.id);
 
         if (error) {
           console.error("Error loading user profile:", error);
           setProfile(null);
         } else {
-          console.log("Profile refreshed successfully (no cache):", data);
           setProfile(data);
         }
       } catch (error) {
