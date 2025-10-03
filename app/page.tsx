@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     "og:locale": "en_US",
     "theme-color": "#667eea",
     "msapplication-TileColor": "#667eea",
-    
+
     // Structured Data for Website
     "application/ld+json": JSON.stringify({
       "@context": "https://schema.org",

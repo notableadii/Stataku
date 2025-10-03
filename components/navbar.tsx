@@ -24,12 +24,21 @@ import { siteConfig } from "@/config/site";
 import { SearchIcon } from "@/components/icons";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserSearch } from "@/hooks/useUserSearch";
+import { UserSearchResult } from "@/components/UserSearchResult";
 
 export const Navbar = () => {
   const pathname = usePathname();
   const { user, profile, loading } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    filteredUsers,
+    loading: searchLoading,
+    error: searchError,
+    searchQuery,
+    setSearchQuery,
+    isUserSearch,
+  } = useUserSearch();
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -281,7 +290,9 @@ export const Navbar = () => {
               <span className="text-lg font-semibold">Search</span>
             </div>
             <p className="text-sm text-default-500">
-              Search for users, content, and more
+              {isUserSearch
+                ? "Search for users by typing @username"
+                : "Search for users, content, and more"}
             </p>
           </ModalHeader>
           <ModalBody className="pb-6">
@@ -296,7 +307,11 @@ export const Navbar = () => {
                   ESC
                 </Kbd>
               }
-              placeholder="Type to search..."
+              placeholder={
+                isUserSearch
+                  ? "Type @username to search..."
+                  : "Type to search..."
+              }
               startContent={
                 <SearchIcon className="text-lg text-default-400 pointer-events-none flex-shrink-0" />
               }
@@ -310,24 +325,60 @@ export const Navbar = () => {
               }}
             />
 
-            {/* Search Results Placeholder */}
+            {/* Search Results */}
             <div className="mt-4">
-              {searchQuery ? (
+              {searchLoading ? (
                 <div className="text-center py-8">
-                  <div className="text-default-400 text-4xl mb-2">🔍</div>
-                  <p className="text-default-500">
-                    Search results for &quot;{searchQuery}&quot;
-                  </p>
-                  <p className="text-sm text-default-400 mt-1">
-                    Search functionality coming soon...
-                  </p>
+                  <div className="text-default-400 text-4xl mb-2">⏳</div>
+                  <p className="text-default-500">Loading users...</p>
                 </div>
+              ) : searchError ? (
+                <div className="text-center py-8">
+                  <div className="text-danger text-4xl mb-2">❌</div>
+                  <p className="text-danger">Error loading users</p>
+                  <p className="text-sm text-default-400 mt-1">{searchError}</p>
+                </div>
+              ) : searchQuery ? (
+                isUserSearch ? (
+                  filteredUsers.length > 0 ? (
+                    <div className="space-y-1 max-h-96 overflow-y-auto">
+                      {filteredUsers.map((user) => (
+                        <UserSearchResult
+                          key={user.id}
+                          user={user}
+                          onClick={handleSearchClose}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-default-400 text-4xl mb-2">👤</div>
+                      <p className="text-default-500">No users found</p>
+                      <p className="text-sm text-default-400 mt-1">
+                        Try a different search term
+                      </p>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-default-400 text-4xl mb-2">💡</div>
+                    <p className="text-default-500">
+                      Start with @ to search users
+                    </p>
+                    <p className="text-sm text-default-400 mt-1">
+                      Type @username to find users
+                    </p>
+                  </div>
+                )
               ) : (
                 <div className="text-center py-8">
                   <div className="text-default-300 text-4xl mb-2">⚡</div>
                   <p className="text-default-500">Start typing to search</p>
                   <p className="text-sm text-default-400 mt-1">
                     Press <Kbd keys={["ctrl"]}>K</Kbd> to open this search
+                  </p>
+                  <p className="text-xs text-default-400 mt-2">
+                    Type @username to search for users
                   </p>
                 </div>
               )}

@@ -98,17 +98,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "og:image:alt": `${displayName}'s profile on Stataku`,
         "og:site_name": "Stataku",
         "og:locale": "en_US",
-        
+
         // Twitter Card specific meta tags
         "twitter:image:alt": `${displayName}'s profile on Stataku`,
         "twitter:site": "@stataku",
         "twitter:creator": "@stataku",
         "twitter:domain": "stataku.com",
-        
+
         // Additional Discord support
         "theme-color": "#667eea",
         "msapplication-TileColor": "#667eea",
-        
+
         // Structured Data for Person
         "application/ld+json": JSON.stringify({
           "@context": "https://schema.org",

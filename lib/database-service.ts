@@ -12,7 +12,7 @@ import { createClient } from "@libsql/client";
 import { cacheManager, CACHE_OPERATIONS } from "./cache-manager";
 
 // Initialize Turso client lazily
-function getTursoClient() {
+export function getTursoClient() {
   const url = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
@@ -623,6 +623,70 @@ export async function createUsername(
   } catch (error) {
     console.error("Error creating username:", error);
 
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : "Database error",
+      fromCache: false,
+    };
+  }
+}
+
+/**
+ * Get all users for search with caching
+ */
+export async function getAllUsersForSearch(): Promise<
+  DatabaseResult<Profile[]>
+> {
+  try {
+    // Check cache first
+    const cachedData = cacheManager.get<Profile[]>(
+      CACHE_OPERATIONS.SEARCH_USERS,
+      {}
+    );
+
+    if (cachedData) {
+      return {
+        data: cachedData,
+        error: null,
+        fromCache: true,
+      };
+    }
+
+    // Cache miss - fetch from database
+    const turso = getTursoClient();
+
+    const result = await turso.execute({
+      sql: `
+        SELECT id, username, slug, display_name, avatar_url, created_at
+        FROM profiles 
+        WHERE username IS NOT NULL 
+        ORDER BY created_at DESC
+      `,
+      args: [],
+    });
+
+    const users = result.rows.map((row) => ({
+      id: row.id as string,
+      username: row.username as string,
+      slug: row.slug as string,
+      display_name: row.display_name as string | null,
+      avatar_url: row.avatar_url as string | null,
+      created_at: row.created_at as string,
+      bio: null,
+      banner_url: null,
+      last_edit: null,
+      email_sent: "No",
+    }));
+
+    // Cache the result for 5 minutes
+    cacheManager.set(CACHE_OPERATIONS.SEARCH_USERS, {}, users, 5 * 60 * 1000);
+
+    return {
+      data: users,
+      error: null,
+      fromCache: false,
+    };
+  } catch (error) {
     return {
       data: null,
       error: error instanceof Error ? error.message : "Database error",

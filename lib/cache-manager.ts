@@ -12,6 +12,7 @@ interface CacheEntry<T = any> {
   data: T;
   timestamp: number;
   version: number;
+  ttl?: number; // Time to live in milliseconds
 }
 
 interface CacheInvalidationRule {
@@ -54,20 +55,31 @@ class CacheManager {
       return null;
     }
 
-    // Check if entry is still valid (no expiration for now, only version-based invalidation)
+    // Check if entry is still valid (TTL check)
+    if (entry.ttl && Date.now() - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+
     return entry.data;
   }
 
   /**
    * Set data in cache
    */
-  set<T>(operation: string, params: Record<string, any>, data: T): void {
+  set<T>(
+    operation: string,
+    params: Record<string, any>,
+    data: T,
+    ttl?: number
+  ): void {
     const key = this.generateKey(operation, params);
 
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
       version: this.version,
+      ttl,
     });
   }
 
@@ -77,14 +89,14 @@ class CacheManager {
   invalidateByTable(table: string, changedData?: any): void {
     this.version++;
     console.log(
-      `🔄 Cache invalidated for table: ${table}, new version: ${this.version}`,
+      `🔄 Cache invalidated for table: ${table}, new version: ${this.version}`
     );
 
     // If we have specific data, try to invalidate only related entries
     if (changedData) {
       console.log(
         "🎯 Invalidating specific cache entries for data:",
-        changedData,
+        changedData
       );
       const rules = this.invalidationRules.get(table) || [];
 
@@ -108,7 +120,8 @@ class CacheManager {
         if (
           key.includes(`getProfile`) ||
           key.includes(`getProfileBySlug`) ||
-          key.includes(`checkUsername`)
+          key.includes(`checkUsername`) ||
+          key.includes(`searchUsers`)
         ) {
           keysToDelete.push(key);
         }
@@ -137,7 +150,7 @@ class CacheManager {
   clear(): void {
     console.log(
       "🗑️ Clearing all cache entries. Cache size before:",
-      this.cache.size,
+      this.cache.size
     );
     this.cache.clear();
     this.version++;
@@ -211,6 +224,9 @@ cacheManager.registerInvalidationRule("profiles", {
       keys.push(`checkUsername:{"username":"${data.username}"}`);
     }
 
+    // Invalidate search users cache when any profile changes
+    keys.push(`searchUsers:{}`);
+
     return keys;
   },
 });
@@ -220,6 +236,7 @@ export const CACHE_OPERATIONS = {
   GET_PROFILE: "getProfile",
   GET_PROFILE_BY_SLUG: "getProfileBySlug",
   CHECK_USERNAME: "checkUsername",
+  SEARCH_USERS: "searchUsers",
 } as const;
 
 export type CacheOperation =

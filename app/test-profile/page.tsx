@@ -71,17 +71,17 @@ export const metadata: Metadata = {
     "og:image:alt": `${testProfile.display_name}'s profile on Stataku`,
     "og:site_name": "Stataku",
     "og:locale": "en_US",
-    
+
     // Twitter Card specific meta tags
     "twitter:image:alt": `${testProfile.display_name}'s profile on Stataku`,
     "twitter:site": "@stataku",
     "twitter:creator": "@stataku",
     "twitter:domain": "stataku.com",
-    
+
     // Additional Discord support
     "theme-color": "#667eea",
     "msapplication-TileColor": "#667eea",
-    
+
     // Structured Data for Person
     "application/ld+json": JSON.stringify({
       "@context": "https://schema.org",
@@ -103,45 +103,81 @@ export default function TestProfilePage() {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Test Profile Page</h1>
-        
+
         <div className="space-y-6">
           <div className="bg-content1 p-6 rounded-lg">
             <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
             <div className="space-y-2">
-              <p><strong>Display Name:</strong> {testProfile.display_name}</p>
-              <p><strong>Username:</strong> @{testProfile.username}</p>
-              <p><strong>Bio:</strong> {testProfile.bio}</p>
-              <p><strong>Avatar:</strong> {testProfile.avatar_url}</p>
-              <p><strong>Banner:</strong> {testProfile.banner_url}</p>
+              <p>
+                <strong>Display Name:</strong> {testProfile.display_name}
+              </p>
+              <p>
+                <strong>Username:</strong> @{testProfile.username}
+              </p>
+              <p>
+                <strong>Bio:</strong> {testProfile.bio}
+              </p>
+              <p>
+                <strong>Avatar:</strong> {testProfile.avatar_url}
+              </p>
+              <p>
+                <strong>Banner:</strong> {testProfile.banner_url}
+              </p>
             </div>
           </div>
 
           <div className="bg-content1 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">Test Social Media Sharing</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Test Social Media Sharing
+            </h2>
             <p className="mb-4">
-              This page simulates a user profile with proper metadata for social media sharing.
-              Test it by sharing this URL on Discord, Facebook, Twitter, or LinkedIn.
+              This page simulates a user profile with proper metadata for social
+              media sharing. Test it by sharing this URL on Discord, Facebook,
+              Twitter, or LinkedIn.
             </p>
-            
+
             <div className="space-y-2">
-              <p><strong>URL to test:</strong> https://stataku.com/test-profile</p>
-              <p><strong>Expected Title:</strong> {testProfile.display_name} (@{testProfile.username}) - Stataku</p>
-              <p><strong>Expected Description:</strong> {testProfile.bio} - Join {testProfile.display_name} on Stataku</p>
-              <p><strong>Expected Images:</strong> Avatar and banner images should appear in embeds</p>
+              <p>
+                <strong>URL to test:</strong> https://stataku.com/test-profile
+              </p>
+              <p>
+                <strong>Expected Title:</strong> {testProfile.display_name} (@
+                {testProfile.username}) - Stataku
+              </p>
+              <p>
+                <strong>Expected Description:</strong> {testProfile.bio} - Join{" "}
+                {testProfile.display_name} on Stataku
+              </p>
+              <p>
+                <strong>Expected Images:</strong> Avatar and banner images
+                should appear in embeds
+              </p>
             </div>
           </div>
 
           <div className="bg-content1 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">Discord Embed Preview</h2>
-            <p className="mb-4">
-              When shared on Discord, this should show:
-            </p>
+            <h2 className="text-xl font-semibold mb-4">
+              Discord Embed Preview
+            </h2>
+            <p className="mb-4">When shared on Discord, this should show:</p>
             <ul className="space-y-1 text-sm">
-              <li>• <strong>Title:</strong> {testProfile.display_name} (@{testProfile.username}) - Stataku</li>
-              <li>• <strong>Description:</strong> {testProfile.bio} - Join {testProfile.display_name} on Stataku</li>
-              <li>• <strong>Image:</strong> Profile banner image (1200x630)</li>
-              <li>• <strong>Site:</strong> Stataku</li>
-              <li>• <strong>Type:</strong> Profile</li>
+              <li>
+                • <strong>Title:</strong> {testProfile.display_name} (@
+                {testProfile.username}) - Stataku
+              </li>
+              <li>
+                • <strong>Description:</strong> {testProfile.bio} - Join{" "}
+                {testProfile.display_name} on Stataku
+              </li>
+              <li>
+                • <strong>Image:</strong> Profile banner image (1200x630)
+              </li>
+              <li>
+                • <strong>Site:</strong> Stataku
+              </li>
+              <li>
+                • <strong>Type:</strong> Profile
+              </li>
             </ul>
           </div>
 
@@ -149,9 +185,9 @@ export default function TestProfilePage() {
             <h2 className="text-xl font-semibold mb-4">Testing Tools</h2>
             <ul className="space-y-2">
               <li>
-                <a 
-                  href="https://developers.facebook.com/tools/debug/" 
-                  target="_blank" 
+                <a
+                  href="https://developers.facebook.com/tools/debug/"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
@@ -159,9 +195,9 @@ export default function TestProfilePage() {
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://cards-dev.twitter.com/validator" 
-                  target="_blank" 
+                <a
+                  href="https://cards-dev.twitter.com/validator"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
@@ -169,9 +205,9 @@ export default function TestProfilePage() {
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://www.opengraph.xyz/" 
-                  target="_blank" 
+                <a
+                  href="https://www.opengraph.xyz/"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
