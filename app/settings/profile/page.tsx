@@ -6,10 +6,10 @@ import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
 import { Divider } from "@heroui/divider";
 import { Tooltip } from "@heroui/tooltip";
+import { addToast } from "@heroui/toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { CameraIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
-import { usernameChecker } from "@/lib/username-cache";
 
 import { ProfilePageSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,19 +36,8 @@ export default function ProfileSettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
   const [showAvatarTooltip, setShowAvatarTooltip] = useState(false);
   const [showBannerTooltip, setShowBannerTooltip] = useState(false);
-
-  // Username validation state
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
-    null
-  );
-  const [usernameLoading, setUsernameLoading] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   const avatarUrlInputRef = useRef<HTMLInputElement>(null);
   const bannerUrlInputRef = useRef<HTMLInputElement>(null);
@@ -78,22 +67,25 @@ export default function ProfileSettingsPage() {
 
         if (result.error) {
           console.error("Error fetching profile:", result.error);
-          setMessage({
-            type: "error",
-            text: "Failed to load profile data",
+          addToast({
+            title: "Load Failed",
+            description: "Failed to load profile data. Please try again.",
+            color: "danger",
+            variant: "flat",
           });
           return;
         }
 
         if (result.data) {
           setLocalProfile(result.data as UserProfile);
-          console.log("✅ Fresh profile data loaded successfully");
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
-        setMessage({
-          type: "error",
-          text: "Failed to load profile data",
+        addToast({
+          title: "Load Failed",
+          description: "Failed to load profile data. Please try again.",
+          color: "danger",
+          variant: "flat",
         });
       } finally {
         setProfileLoading(false);
@@ -121,59 +113,6 @@ export default function ProfileSettingsPage() {
     }
   }, [localProfile, formInitialized]);
 
-  // Username validation function
-  const validateUsername = (value: string) => {
-    const trimmedValue = value.trim();
-
-    // Reset validation state
-    setUsernameError(null);
-    setUsernameAvailable(null);
-    setUsernameLoading(false);
-
-    if (!trimmedValue) {
-      return;
-    }
-
-    // Check if username is different from current profile username
-    if (localProfile && trimmedValue === localProfile.username) {
-      setUsernameAvailable(true);
-      return;
-    }
-
-    // Check format first
-    const usernameRegex = /^[a-z0-9_.]{3,30}$/;
-    if (!usernameRegex.test(trimmedValue)) {
-      setUsernameError(
-        "Username must be 3-30 characters and contain only lowercase letters, numbers, underscores, and periods."
-      );
-      setUsernameAvailable(false);
-      return;
-    }
-
-    // Start real-time checking
-    setUsernameLoading(true);
-    usernameChecker.checkUsernameAvailability(
-      trimmedValue,
-      (checkedUsername, available, loading) => {
-        if (checkedUsername === trimmedValue) {
-          setUsernameLoading(loading);
-          if (!loading) {
-            if (available === null) {
-              setUsernameError("Failed to check username availability");
-              setUsernameAvailable(false);
-            } else if (available === false) {
-              setUsernameError("Username is already taken");
-              setUsernameAvailable(false);
-            } else {
-              setUsernameError(null);
-              setUsernameAvailable(true);
-            }
-          }
-        }
-      }
-    );
-  };
-
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
@@ -181,7 +120,6 @@ export default function ProfileSettingsPage() {
     const filteredValue = value.replace(/[^a-z0-9_.]/g, "");
 
     setUsername(filteredValue);
-    validateUsername(filteredValue);
 
     // Store current username in localStorage for global access
     if (typeof window !== "undefined") {
@@ -202,52 +140,115 @@ export default function ProfileSettingsPage() {
 
     try {
       await navigator.clipboard.writeText(profileUrl);
-      setMessage({
-        type: "success",
-        text: "Profile URL copied to clipboard!",
+      addToast({
+        title: "Profile URL Copied",
+        description: "Profile URL has been copied to your clipboard!",
+        color: "success",
+        variant: "flat",
       });
     } catch (error) {
       console.error("Failed to copy URL:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to copy URL to clipboard",
+      addToast({
+        title: "Copy Failed",
+        description: "Failed to copy URL to clipboard",
+        color: "danger",
+        variant: "flat",
       });
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
-    setMessage(null);
-
-    // Validate username before saving
-    if (username.trim() && usernameAvailable !== true) {
-      setMessage({
-        type: "error",
-        text: "Please fix username validation errors before saving",
-      });
-      setSaving(false);
-      return;
-    }
 
     try {
       if (!user) {
         throw new Error("No user found");
       }
 
-      const { data: _data, error } = await updateUserProfile(user.id, {
-        username: username.trim() || undefined,
+      const currentUsername = localProfile?.username;
+      const trimmedUsername = username.trim();
+
+      // Validate username format if provided
+      if (trimmedUsername) {
+        const usernameRegex = /^[a-z0-9_.]{3,30}$/;
+        if (!usernameRegex.test(trimmedUsername)) {
+          addToast({
+            title: "Invalid Username",
+            description:
+              "Username must be 3-30 characters and contain only lowercase letters, numbers, underscores, and periods.",
+            color: "danger",
+            variant: "flat",
+          });
+          setSaving(false);
+          return;
+        }
+
+        // Check username availability if it's different from current username
+        if (trimmedUsername !== currentUsername) {
+          try {
+            const response = await fetch("/api/check-username", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ username: trimmedUsername }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.available) {
+              addToast({
+                title: "Username Not Available",
+                description:
+                  "This username is already taken. Please choose a different one.",
+                color: "danger",
+                variant: "flat",
+              });
+              setSaving(false);
+              return;
+            }
+          } catch (error) {
+            console.error("Error checking username availability:", error);
+            addToast({
+              title: "Validation Error",
+              description:
+                "Failed to check username availability. Please try again.",
+              color: "danger",
+              variant: "flat",
+            });
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
+      // Prepare update data
+      const updateData: any = {
         display_name: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         banner_url: bannerUrl.trim() || undefined,
-        last_edit: new Date().toISOString(), // Set last_edit timestamp
-      });
+        last_edit: new Date().toISOString(),
+      };
+
+      // Only update username if it's different
+      if (trimmedUsername && trimmedUsername !== currentUsername) {
+        updateData.username = trimmedUsername;
+      }
+
+      const { error } = await updateUserProfile(user.id, updateData);
 
       if (error) {
         throw new Error(error.message || "Failed to update profile");
       }
 
-      setMessage({ type: "success", text: "Profile updated successfully!" });
+      // Show success toast
+      addToast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully!",
+        color: "success",
+        variant: "flat",
+      });
 
       // Clear current username from localStorage after saving
       if (typeof window !== "undefined") {
@@ -256,17 +257,6 @@ export default function ProfileSettingsPage() {
 
       // If username changed, invalidate cache and refresh profile
       if (username.trim() !== localProfile?.username) {
-        console.log(
-          "🔄 Username changed, invalidating cache and refreshing profile"
-        );
-
-        // Invalidate cache for the old username/slug
-        if (localProfile?.username) {
-          // Clear cache for old profile
-          const cacheKey = `profile-${localProfile.username}`;
-          // Note: Cache invalidation is handled by the API, but we can force refresh
-        }
-
         // Force refresh profile in auth context (this will do a fresh database read)
         await forceRefreshProfile();
 
@@ -274,11 +264,6 @@ export default function ProfileSettingsPage() {
         const freshProfile = await getUserProfileNoCache(user.id);
         if (freshProfile.data) {
           setLocalProfile(freshProfile.data as UserProfile);
-
-          // Reset username validation state since profile was refreshed
-          setUsernameAvailable(null);
-          setUsernameLoading(false);
-          setUsernameError(null);
         }
       } else {
         // Just refresh profile normally
@@ -292,26 +277,23 @@ export default function ProfileSettingsPage() {
       if ("caches" in window) {
         try {
           const cacheNames = await caches.keys();
-
           await Promise.all(
             cacheNames.map((cacheName) => caches.delete(cacheName))
           );
-          console.log("✅ Browser caches cleared");
         } catch (error) {
           console.error("❌ Error clearing browser caches:", error);
         }
       }
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setMessage(null);
-      }, 3000);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setMessage({
-        type: "error",
-        text:
-          error instanceof Error ? error.message : "Failed to update profile",
+      addToast({
+        title: "Update Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update profile. Please try again.",
+        color: "danger",
+        variant: "flat",
       });
     } finally {
       setSaving(false);
@@ -555,42 +537,11 @@ export default function ProfileSettingsPage() {
                 placeholder="Enter your username"
                 value={username}
                 onChange={handleUsernameChange}
-                color={
-                  usernameError
-                    ? "danger"
-                    : usernameAvailable === true
-                      ? "success"
-                      : usernameLoading
-                        ? "warning"
-                        : "default"
-                }
-                variant={usernameError ? "bordered" : "flat"}
-                endContent={
-                  usernameLoading ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : usernameAvailable === true ? (
-                    <span className="text-success text-lg">✓</span>
-                  ) : usernameError ? (
-                    <span className="text-danger text-lg">✗</span>
-                  ) : null
-                }
               />
-              {usernameError && (
-                <p className="text-xs text-danger mt-1.5">{usernameError}</p>
-              )}
-              {!usernameError && usernameAvailable === true && (
-                <p className="text-xs text-success mt-1.5">
-                  Username is available
-                </p>
-              )}
-              {!usernameError &&
-                usernameAvailable === null &&
-                username.trim() && (
-                  <p className="text-xs text-default-400 mt-1.5">
-                    Username must be 3-30 characters and contain only lowercase
-                    letters, numbers, underscores, and periods
-                  </p>
-                )}
+              <p className="text-xs text-default-400 mt-1.5">
+                Username must be 3-30 characters and contain only lowercase
+                letters, numbers, underscores, and periods.
+              </p>
             </div>
 
             {/* Display Name */}
@@ -721,19 +672,6 @@ export default function ProfileSettingsPage() {
 
           <Divider className="my-6 xs:my-8" />
 
-          {/* Message */}
-          {message && (
-            <div
-              className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg ${
-                message.type === "success"
-                  ? "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400"
-                  : "bg-danger-50 text-danger-700 dark:bg-danger-900/20 dark:text-danger-400"
-              }`}
-            >
-              <p className="text-xs sm:text-sm font-medium">{message.text}</p>
-            </div>
-          )}
-
           {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 sm:justify-end">
             <Button
@@ -786,8 +724,8 @@ export default function ProfileSettingsPage() {
                 </button>
                 <button
                   className="text-default-400 hover:text-primary transition-colors p-1"
-                  onClick={handleCopyProfileUrl}
                   title="Copy profile URL"
+                  onClick={handleCopyProfileUrl}
                 >
                   <ClipboardDocumentIcon className="w-4 h-4" />
                 </button>

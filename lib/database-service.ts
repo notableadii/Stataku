@@ -436,6 +436,7 @@ export async function updateProfile(
     avatar_url?: string | null;
     banner_url?: string | null;
     last_edit?: string | null;
+    last_username_update?: string | null;
   }
 ): Promise<DatabaseResult<Profile>> {
   try {
@@ -499,6 +500,11 @@ export async function updateProfile(
     if (updates.last_edit !== undefined) {
       updateFields.push("last_edit = ?");
       values.push(updates.last_edit);
+    }
+
+    if (updates.last_username_update !== undefined) {
+      updateFields.push("last_username_update = ?");
+      values.push(updates.last_username_update);
     }
 
     if (updateFields.length === 0) {

@@ -153,7 +153,7 @@ export const Navbar = () => {
                 <UserProfileDropdown />
               ) : user ? (
                 <Button
-                  className="text-sm font-normal text-warning-600 bg-warning-100"
+                  className="text-sm font-normal text-default-600 bg-default-100"
                   variant="flat"
                   onPress={() => window.location.reload()}
                 >
@@ -237,7 +237,7 @@ export const Navbar = () => {
                 ) : user ? (
                   <NavbarMenuItem>
                     <Button
-                      className="w-full text-warning-600 bg-warning-100"
+                      className="w-full text-default-600 bg-default-100"
                       size="lg"
                       variant="flat"
                       onPress={() => window.location.reload()}

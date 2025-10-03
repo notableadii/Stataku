@@ -109,6 +109,7 @@ export async function POST() {
       `);
     }
 
+
     // Update existing profiles to have slug values (migration)
     try {
       await turso.execute(`

@@ -63,8 +63,9 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
         banner_url, 
         created_at,
         last_edit,
-        email_sent
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, 'No')`,
+        email_sent,
+        last_username_update
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, 'No', CURRENT_TIMESTAMP)`,
       args: [
         user.id,
         username,

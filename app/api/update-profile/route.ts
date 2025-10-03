@@ -96,6 +96,7 @@ export const POST = withSecurity(async (request: NextRequest, { user }) => {
       );
     }
 
+
     // Validate username if provided
     if (username !== undefined && username !== null) {
       if (typeof username !== "string") {
