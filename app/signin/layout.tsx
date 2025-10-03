@@ -1,41 +1,44 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign In",
+  title: "Sign In - Stataku",
   description:
-    "Sign in to your Stataku account to track your anime and manga progress, rate titles, and connect with the community.",
+    "Sign in to your Stataku account. Access your dashboard, manage your profile, and connect with the community.",
   keywords: [
     "sign in",
     "login",
     "account",
+    "Stataku",
     "authentication",
-    "user login",
-    "access account",
+    "access",
+    "social platform",
   ],
   openGraph: {
     title: "Sign In - Stataku",
-    description:
-      "Sign in to your Stataku account to track your anime and manga progress, rate titles, and connect with the community.",
+    description: "Sign in to your Stataku account and access your dashboard.",
     type: "website",
+    url: "https://stataku.com/signin",
+    siteName: "Stataku",
     images: [
       {
-        url: "/og-signin.png",
+        url: "/og",
         width: 1200,
         height: 630,
         alt: "Sign In to Stataku",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sign In - Stataku",
-    description:
-      "Sign in to your Stataku account to track your anime and manga progress.",
-    images: ["/og-signin.png"],
+    description: "Sign in to your Stataku account.",
+    images: ["/og"],
+    creator: "@stataku",
   },
   robots: {
-    index: false, // Auth pages should not be indexed
-    follow: false,
+    index: false,
+    follow: true,
   },
 };
 
@@ -44,5 +47,5 @@ export default function SignInLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }

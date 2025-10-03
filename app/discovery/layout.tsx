@@ -1,39 +1,41 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Discovery",
+  title: "Discovery - Stataku",
   description:
-    "Discover new anime and manga recommendations based on your preferences. Find trending titles and hidden gems in the community.",
+    "Discover new content and trending topics on Stataku. Find what's popular in the community and explore new interests.",
   keywords: [
-    "anime discovery",
-    "manga discovery",
-    "recommendations",
-    "trending anime",
-    "trending manga",
-    "anime suggestions",
-    "manga suggestions",
-    "hidden gems",
+    "discovery",
+    "trending",
+    "popular",
+    "Stataku",
+    "community",
+    "content",
+    "explore",
+    "social platform",
   ],
   openGraph: {
     title: "Discovery - Stataku",
-    description:
-      "Discover new anime and manga recommendations based on your preferences. Find trending titles and hidden gems in the community.",
+    description: "Discover new content and trending topics on Stataku.",
     type: "website",
+    url: "https://stataku.com/discovery",
+    siteName: "Stataku",
     images: [
       {
-        url: "/og-discovery.png",
+        url: "/og",
         width: 1200,
         height: 630,
-        alt: "Discover New Anime & Manga on Stataku",
+        alt: "Discovery on Stataku",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Discovery - Stataku",
-    description:
-      "Discover new anime and manga recommendations based on your preferences.",
-    images: ["/og-discovery.png"],
+    description: "Discover new content and trending topics on Stataku.",
+    images: ["/og"],
+    creator: "@stataku",
   },
 };
 
@@ -42,5 +44,5 @@ export default function DiscoveryLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }

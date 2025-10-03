@@ -1,41 +1,42 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Browse",
+  title: "Browse - Stataku",
   description:
-    "Discover and explore thousands of anime, manga, manwha, and manhua titles. Find your next favorite series and track your progress.",
+    "Browse and discover content on Stataku. Explore what the community is sharing and find interesting profiles.",
   keywords: [
-    "browse anime",
-    "browse manga",
-    "discover anime",
-    "discover manga",
-    "anime database",
-    "manga database",
-    "manwha",
-    "manhua",
-    "anime search",
-    "manga search",
+    "browse",
+    "discover",
+    "explore",
+    "Stataku",
+    "community",
+    "content",
+    "profiles",
+    "social platform",
   ],
   openGraph: {
-    title: "Browse Anime & Manga - Stataku",
+    title: "Browse - Stataku",
     description:
-      "Discover and explore thousands of anime, manga, manwha, and manhua titles. Find your next favorite series and track your progress.",
+      "Browse and discover content on Stataku. Explore what the community is sharing.",
     type: "website",
+    url: "https://stataku.com/browse",
+    siteName: "Stataku",
     images: [
       {
-        url: "/og-browse.png",
+        url: "/og",
         width: 1200,
         height: 630,
-        alt: "Browse Anime & Manga on Stataku",
+        alt: "Browse on Stataku",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Browse Anime & Manga - Stataku",
-    description:
-      "Discover and explore thousands of anime, manga, manwha, and manhua titles.",
-    images: ["/og-browse.png"],
+    title: "Browse - Stataku",
+    description: "Browse and discover content on Stataku.",
+    images: ["/og"],
+    creator: "@stataku",
   },
 };
 
@@ -44,5 +45,5 @@ export default function BrowseLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }

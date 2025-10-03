@@ -1,41 +1,45 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign Up",
+  title: "Join Stataku - Sign Up",
   description:
-    "Create your Stataku account to start tracking anime and manga, rating titles, and joining our community of enthusiasts.",
+    "Create your Stataku account and join our community. Start connecting, sharing, and discovering on our social platform.",
   keywords: [
     "sign up",
     "register",
-    "create account",
     "join",
-    "new user",
+    "create account",
+    "Stataku",
+    "community",
+    "social platform",
     "registration",
   ],
   openGraph: {
-    title: "Sign Up - Stataku",
-    description:
-      "Create your Stataku account to start tracking anime and manga, rating titles, and joining our community of enthusiasts.",
+    title: "Join Stataku - Sign Up",
+    description: "Create your Stataku account and join our community.",
     type: "website",
+    url: "https://stataku.com/signup",
+    siteName: "Stataku",
     images: [
       {
-        url: "/og-signup.png",
+        url: "/og",
         width: 1200,
         height: 630,
-        alt: "Sign Up for Stataku",
+        alt: "Join Stataku",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sign Up - Stataku",
-    description:
-      "Create your Stataku account to start tracking anime and manga.",
-    images: ["/og-signup.png"],
+    title: "Join Stataku - Sign Up",
+    description: "Create your Stataku account and join our community.",
+    images: ["/og"],
+    creator: "@stataku",
   },
   robots: {
-    index: false, // Auth pages should not be indexed
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 
@@ -44,5 +48,5 @@ export default function SignUpLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }

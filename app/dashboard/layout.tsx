@@ -1,41 +1,45 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Dashboard - Stataku",
   description:
-    "Your personal anime and manga tracking dashboard. View your profile, track your progress, and manage your collection.",
+    "Your personal dashboard on Stataku. Manage your profile, view your activity, and connect with the community.",
   keywords: [
     "dashboard",
-    "anime tracker",
-    "manga tracker",
+    "Stataku",
     "profile",
-    "collection",
-    "progress tracking",
-    "personal dashboard",
+    "activity",
+    "social platform",
+    "personal",
+    "account",
   ],
   openGraph: {
     title: "Dashboard - Stataku",
     description:
-      "Your personal anime and manga tracking dashboard. View your profile, track your progress, and manage your collection.",
+      "Your personal dashboard on Stataku. Manage your profile and connect with the community.",
     type: "website",
+    url: "https://stataku.com/dashboard",
+    siteName: "Stataku",
     images: [
       {
-        url: "/og-dashboard.png",
+        url: "/og",
         width: 1200,
         height: 630,
         alt: "Stataku Dashboard",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Dashboard - Stataku",
-    description: "Your personal anime and manga tracking dashboard.",
-    images: ["/og-dashboard.png"],
+    description: "Your personal dashboard on Stataku.",
+    images: ["/og"],
+    creator: "@stataku",
   },
   robots: {
-    index: false, // Dashboard should not be indexed
-    follow: false,
+    index: false,
+    follow: true,
   },
 };
 
@@ -44,5 +48,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }

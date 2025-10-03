@@ -25,48 +25,80 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const displayName = profile.display_name || profile.username;
-    const profileTitle = `@${profile.username} - ${displayName} - Stataku`;
+    const profileTitle = `${displayName} (@${profile.username}) - Stataku`;
     const profileDescription = profile.bio
-      ? `${profile.bio} - View ${displayName}'s profile on Stataku.`
-      : `View ${displayName}'s profile on Stataku. See their anime and manga ratings, reviews, and activity.`;
+      ? `${profile.bio} - Join ${displayName} on Stataku`
+      : `Join ${displayName} (@${profile.username}) on Stataku - the modern social platform`;
 
     // Use profile avatar if available, otherwise use default
     const profileImage = profile.avatar_url || "/avatars/universal-avatar.jpg";
+    const bannerImage = profile.banner_url || "/banners/banner.jpg";
 
     return {
       title: profileTitle,
       description: profileDescription,
       keywords: [
-        `${profile.username}`,
-        `${displayName}`,
+        profile.username,
+        displayName,
+        "Stataku",
+        "social platform",
         "user profile",
-        "anime profile",
-        "manga profile",
-        "Stataku profile",
-        "user ratings",
-        "user reviews",
+        "community",
+        "connect",
+        "share",
+        "discover",
       ],
+      authors: [{ name: displayName }],
       openGraph: {
         title: profileTitle,
         description: profileDescription,
         type: "profile",
+        url: `https://stataku.com/user/${username}`,
+        siteName: "Stataku",
         images: [
           {
             url: profileImage,
             width: 400,
             height: 400,
             alt: `${displayName}'s profile picture`,
+            type: "image/jpeg",
+          },
+          {
+            url: bannerImage,
+            width: 1200,
+            height: 630,
+            alt: `${displayName}'s profile banner`,
+            type: "image/jpeg",
           },
         ],
+        profile: {
+          firstName: displayName.split(" ")[0] || displayName,
+          lastName: displayName.split(" ").slice(1).join(" ") || "",
+          username: profile.username,
+        },
       },
       twitter: {
-        card: "summary",
+        card: "summary_large_image",
         title: profileTitle,
         description: profileDescription,
-        images: [profileImage],
+        images: [bannerImage],
+        creator: "@stataku",
       },
       alternates: {
-        canonical: `/user/${username}`,
+        canonical: `https://stataku.com/user/${username}`,
+      },
+      other: {
+        // Structured Data for Person
+        "application/ld+json": JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Person",
+          name: displayName,
+          alternateName: profile.username,
+          url: `https://stataku.com/user/${username}`,
+          description: profileDescription,
+          image: profileImage,
+          sameAs: [],
+        }),
       },
     };
   } catch {

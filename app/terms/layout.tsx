@@ -1,21 +1,45 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service",
+  title: "Terms of Service - Stataku",
   description:
-    "Read Stataku's terms of service to understand the rules and guidelines for using our platform.",
+    "Read Stataku's terms of service and user agreement. Understand your rights and responsibilities when using our social platform.",
   keywords: [
     "terms of service",
-    "terms and conditions",
     "user agreement",
-    "platform rules",
-    "service guidelines",
+    "terms and conditions",
+    "legal",
+    "Stataku",
+    "user rights",
+    "service terms",
+    "agreement",
   ],
   openGraph: {
     title: "Terms of Service - Stataku",
-    description:
-      "Read Stataku's terms of service to understand the rules and guidelines for using our platform.",
+    description: "Read Stataku's terms of service and user agreement.",
     type: "website",
+    url: "https://stataku.com/terms",
+    siteName: "Stataku",
+    images: [
+      {
+        url: "/og",
+        width: 1200,
+        height: 630,
+        alt: "Stataku Terms of Service",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service - Stataku",
+    description: "Read Stataku's terms of service and user agreement.",
+    images: ["/og"],
+    creator: "@stataku",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -24,5 +48,5 @@ export default function TermsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }

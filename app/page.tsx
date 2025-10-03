@@ -8,40 +8,61 @@ import { title, subtitle } from "@/components/primitives";
 import { HomeClient } from "./home-client";
 
 export const metadata: Metadata = {
-  title: "Home",
+  title: "Stataku - Social Platform",
   description:
-    "Track, vote and share beautiful rating cards for your favourite anime, manga, manwha and manhua. Discover and rate content with our community.",
+    "Connect, share, and discover on Stataku - the modern social platform. Join our community and explore what others are sharing.",
   keywords: [
-    "anime rating",
-    "manga rating",
-    "manwha rating",
-    "manhua rating",
-    "anime tracker",
-    "manga tracker",
-    "rating cards",
-    "anime community",
-    "manga community",
+    "Stataku",
+    "social platform",
+    "community",
+    "connect",
+    "share",
+    "discover",
+    "social media",
+    "networking",
+    "social networking",
+    "platform",
   ],
   openGraph: {
-    title: "Stataku - Track & Rate Your Favorite Anime & Manga",
+    title: "Stataku - Social Platform",
     description:
-      "Track, vote and share beautiful rating cards for your favourite anime, manga, manwha and manhua. Discover and rate content with our community.",
+      "Connect, share, and discover on Stataku - the modern social platform. Join our community and explore what others are sharing.",
     type: "website",
+    url: "https://stataku.com",
+    siteName: "Stataku",
     images: [
       {
-        url: "/og-home.png",
+        url: "/og",
         width: 1200,
         height: 630,
-        alt: "Stataku - Track & Rate Your Favorite Anime & Manga",
+        alt: "Stataku - Social Platform",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Stataku - Track & Rate Your Favorite Anime & Manga",
+    title: "Stataku - Social Platform",
     description:
-      "Track, vote and share beautiful rating cards for your favourite anime, manga, manwha and manhua.",
-    images: ["/og-home.png"],
+      "Connect, share, and discover on Stataku - the modern social platform.",
+    images: ["/og"],
+    creator: "@stataku",
+  },
+  other: {
+    // Structured Data for Website
+    "application/ld+json": JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Stataku",
+      url: "https://stataku.com",
+      description:
+        "Connect, share, and discover on Stataku - the modern social platform",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://stataku.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    }),
   },
 };
 export default function Home() {

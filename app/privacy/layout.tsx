@@ -1,21 +1,47 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Privacy Policy - Stataku",
   description:
-    "Read Stataku's privacy policy to understand how we collect, use, and protect your personal information.",
+    "Learn how Stataku collects, uses, and protects your personal information. Our privacy policy explains your rights and our data practices.",
   keywords: [
     "privacy policy",
-    "privacy",
     "data protection",
+    "privacy",
     "personal information",
-    "data collection",
+    "Stataku",
+    "GDPR",
+    "data security",
+    "user rights",
   ],
   openGraph: {
     title: "Privacy Policy - Stataku",
     description:
-      "Read Stataku's privacy policy to understand how we collect, use, and protect your personal information.",
+      "Learn how Stataku protects your personal information and privacy.",
     type: "website",
+    url: "https://stataku.com/privacy",
+    siteName: "Stataku",
+    images: [
+      {
+        url: "/og",
+        width: 1200,
+        height: 630,
+        alt: "Stataku Privacy Policy",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy - Stataku",
+    description:
+      "Learn how Stataku protects your personal information and privacy.",
+    images: ["/og"],
+    creator: "@stataku",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -24,5 +50,5 @@ export default function PrivacyLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <>{children}</>;
 }
