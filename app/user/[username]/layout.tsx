@@ -31,8 +31,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `Join ${displayName} (@${profile.username}) on Stataku - the modern social platform`;
 
     // Use profile avatar if available, otherwise use default
-    const profileImage = profile.avatar_url || "/avatars/universal-avatar.jpg";
-    const bannerImage = profile.banner_url || "/banners/banner.jpg";
+    const profileImage = profile.avatar_url
+      ? profile.avatar_url.startsWith("http")
+        ? profile.avatar_url
+        : profile.avatar_url
+      : "/avatars/universal-avatar.jpg";
+    const bannerImage = profile.banner_url
+      ? profile.banner_url.startsWith("http")
+        ? profile.banner_url
+        : profile.banner_url
+      : "/banners/banner.jpg";
 
     return {
       title: profileTitle,
@@ -83,6 +91,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         canonical: `https://stataku.com/user/${username}`,
       },
       other: {
+        // Discord-specific meta tags for better embed support
+        "og:image:width": "1200",
+        "og:image:height": "630",
+        "og:image:type": "image/jpeg",
+        "og:image:alt": `${displayName}'s profile on Stataku`,
+        "og:site_name": "Stataku",
+        "og:locale": "en_US",
+        
+        // Twitter Card specific meta tags
+        "twitter:image:alt": `${displayName}'s profile on Stataku`,
+        "twitter:site": "@stataku",
+        "twitter:creator": "@stataku",
+        "twitter:domain": "stataku.com",
+        
+        // Additional Discord support
+        "theme-color": "#667eea",
+        "msapplication-TileColor": "#667eea",
+        
         // Structured Data for Person
         "application/ld+json": JSON.stringify({
           "@context": "https://schema.org",

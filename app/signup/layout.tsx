@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "Stataku",
     images: [
       {
-        url: "/og",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Join Stataku",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Join Stataku - Sign Up",
     description: "Create your Stataku account and join our community.",
-    images: ["/og"],
+    images: ["/logo.png"],
     creator: "@stataku",
   },
   robots: {

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "Stataku",
     images: [
       {
-        url: "/og",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Stataku - Social Platform",
@@ -45,10 +45,19 @@ export const metadata: Metadata = {
     title: "Stataku - Social Platform",
     description:
       "Connect, share, and discover on Stataku - the modern social platform.",
-    images: ["/og"],
+    images: ["/logo.png"],
     creator: "@stataku",
   },
   other: {
+    // Discord-specific meta tags
+    "og:image:width": "1200",
+    "og:image:height": "630",
+    "og:image:type": "image/png",
+    "og:image:alt": "Stataku - Social Platform",
+    "og:locale": "en_US",
+    "theme-color": "#667eea",
+    "msapplication-TileColor": "#667eea",
+    
     // Structured Data for Website
     "application/ld+json": JSON.stringify({
       "@context": "https://schema.org",

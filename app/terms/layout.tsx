@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "Stataku",
     images: [
       {
-        url: "/og",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Stataku Terms of Service",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Terms of Service - Stataku",
     description: "Read Stataku's terms of service and user agreement.",
-    images: ["/og"],
+    images: ["/logo.png"],
     creator: "@stataku",
   },
   robots: {

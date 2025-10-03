@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Social Media Metadata</title>
+
+    <!-- Test Open Graph tags -->
+    <meta property="og:title" content="Test User (testuser) - Stataku" />
+    <meta
+      property="og:description"
+      content="This is a test bio - Join Test User on Stataku"
+    />
+    <meta property="og:type" content="profile" />
+    <meta property="og:url" content="https://stataku.com/user/testuser" />
+    <meta property="og:site_name" content="Stataku" />
+    <meta property="og:image" content="/logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+
+    <!-- Test Twitter Card tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Test User (testuser) - Stataku" />
+    <meta
+      name="twitter:description"
+      content="This is a test bio - Join Test User on Stataku"
+    />
+    <meta name="twitter:image" content="/logo.png" />
+    <meta name="twitter:image:alt" content="Test User's profile on Stataku" />
+    <meta name="twitter:site" content="@stataku" />
+    <meta name="twitter:creator" content="@stataku" />
+
+    <!-- Test structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Test User",
+        "alternateName": "testuser",
+        "url": "https://stataku.com/user/testuser",
+        "description": "This is a test bio - Join Test User on Stataku",
+        "image": "/logo.png",
+        "sameAs": []
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Test Social Media Metadata</h1>
+    <p>This page tests the social media metadata for Stataku user profiles.</p>
+    <p>You can test this by:</p>
+    <ul>
+      <li>Sharing this URL on Discord, Facebook, Twitter, or LinkedIn</li>
+      <li>Using social media debuggers like Facebook's Sharing Debugger</li>
+      <li>Using tools like OpenGraph.xyz to preview the metadata</li>
+    </ul>
+
+    <h2>Expected Results:</h2>
+    <ul>
+      <li><strong>Title:</strong> Test User (testuser) - Stataku</li>
+      <li>
+        <strong>Description:</strong> This is a test bio - Join Test User on
+        Stataku
+      </li>
+      <li>
+        <strong>Image:</strong> /logo.png (should show Stataku logo)
+      </li>
+      <li><strong>Type:</strong> Profile</li>
+    </ul>
+  </body>
+</html>
