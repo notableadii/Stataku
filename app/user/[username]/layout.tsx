@@ -71,11 +71,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             type: "image/jpeg",
           },
         ],
-        profile: {
-          firstName: displayName.split(" ")[0] || displayName,
-          lastName: displayName.split(" ").slice(1).join(" ") || "",
-          username: profile.username,
-        },
       },
       twitter: {
         card: "summary_large_image",
